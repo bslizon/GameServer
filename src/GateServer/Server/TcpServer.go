@@ -14,6 +14,7 @@ import (
 	"GateServer/pack"
 	"bytes"
 	"errors"
+	"time"
 )
 
 type TcpServer struct {
@@ -100,6 +101,7 @@ func tcpHandle(svr *TcpServer, id types.IdType, conn *net.TCPConn) {
 	}()
 	defer utils.PrintPanicStack()
 
+
 	sizeBuf := make([]byte, PACK_DATA_SIZE_TYPE_LEN)
 
 	var dataSize32 int32
@@ -109,6 +111,10 @@ func tcpHandle(svr *TcpServer, id types.IdType, conn *net.TCPConn) {
 	rbuf := new(unPackRingBuffer.UnPackRingBuffer)
 
 	// 一开始先读一口再说
+	err := conn.SetReadDeadline(time.Now().Add(TCP_READ_TIMEOUT * time.Second))
+	if err != nil {
+		panic(err)
+	}
 	n,err := conn.Read(rbuf.Buf[:])
 	if err != nil {
 		panic(err)
@@ -133,6 +139,10 @@ func tcpHandle(svr *TcpServer, id types.IdType, conn *net.TCPConn) {
 				break
 			} else {//没有，继续从conn读
 				if realRdIdx <= realWtIdx { //顺序情况
+					err := conn.SetReadDeadline(time.Now().Add(TCP_READ_TIMEOUT * time.Second))
+					if err != nil {
+						panic(err)
+					}
 					n, err := conn.Read(rbuf.Buf[realWtIdx : ])
 					if(err != nil) {
 						panic(err)
@@ -141,6 +151,10 @@ func tcpHandle(svr *TcpServer, id types.IdType, conn *net.TCPConn) {
 					rbuf.WtIdx += int64(n)
 
 				} else if realRdIdx > realWtIdx {//间插情况
+					err := conn.SetReadDeadline(time.Now().Add(TCP_READ_TIMEOUT * time.Second))
+					if err != nil {
+						panic(err)
+					}
 					n, err := conn.Read(rbuf.Buf[realWtIdx : realRdIdx])
 					if(err != nil) {
 						panic(err)
@@ -186,6 +200,10 @@ func tcpHandle(svr *TcpServer, id types.IdType, conn *net.TCPConn) {
 				break
 			} else {// 没有，得填充缓冲区
 				if realRdIdx <= realWtIdx { //顺序情况
+					err := conn.SetReadDeadline(time.Now().Add(TCP_READ_TIMEOUT * time.Second))
+					if err != nil {
+						panic(err)
+					}
 					n, err := conn.Read(rbuf.Buf[realWtIdx : ])
 					if(err != nil) {
 						panic(err)
@@ -194,6 +212,10 @@ func tcpHandle(svr *TcpServer, id types.IdType, conn *net.TCPConn) {
 					rbuf.WtIdx += int64(n)
 
 				} else if realRdIdx > realWtIdx {//间插情况
+					err := conn.SetReadDeadline(time.Now().Add(TCP_READ_TIMEOUT * time.Second))
+					if err != nil {
+						panic(err)
+					}
 					n, err := conn.Read(rbuf.Buf[realWtIdx : realRdIdx])
 					if(err != nil) {
 						panic(err)

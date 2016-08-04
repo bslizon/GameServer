@@ -14,7 +14,7 @@ func PrintPanicStack() {
 		case string:
 			gLog.Panic(value)
 		default:
-			gLog.Panic("unknown")
+			gLog.Printf("[PANIC] unknown exception type: %#v", x)
 		}
 
 		i := 3
