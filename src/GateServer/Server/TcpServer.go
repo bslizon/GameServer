@@ -62,7 +62,7 @@ func (t *TcpServer) DelConn(i types.IdType) {
 }
 
 func (svr *TcpServer) Start() {
-	tcpAddr, err := net.ResolveTCPAddr("tcp", ":" + GSConfig.LISTEN_PORT)
+	tcpAddr, err := net.ResolveTCPAddr("tcp", ":" + GSConfig.EXTERNAL_LISTEN_PORT)
 	if err != nil {
 		gLog.Fatal(err)
 	}
