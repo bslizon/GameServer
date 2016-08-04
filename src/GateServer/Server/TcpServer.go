@@ -25,6 +25,7 @@ type TcpServer struct {
 }
 
 func New() *TcpServer {
+	defer utils.PrintPanicStack()
 	svr := new(TcpServer)
 	svr.connMap = make(map[types.IdType]*net.TCPConn)
 	svr.ReadPackChan = make(chan *pack.Pack, PACK_CHAN_SIZE)
@@ -34,6 +35,7 @@ func New() *TcpServer {
 
 
 func (t *TcpServer) PutConn(i types.IdType, c *net.TCPConn) error {
+	defer utils.PrintPanicStack()
 	t.Lock()
 	defer func() {
 		t.Unlock()
@@ -47,19 +49,30 @@ func (t *TcpServer) PutConn(i types.IdType, c *net.TCPConn) error {
 	}
 }
 
-func (t *TcpServer) GetConn(i types.IdType) *net.TCPConn {
+func (t *TcpServer) GetConn(i types.IdType) (*net.TCPConn, bool) {
+	defer utils.PrintPanicStack()
 	t.Lock()
-	c := t.connMap[i]
+	c, ok := t.connMap[i]
 	t.Unlock()
-	return c
+	return c, ok
 }
 
 func (t *TcpServer) DelConn(i types.IdType) {
+	defer utils.PrintPanicStack()
 	t.Lock()
 	defer func() {
 		t.Unlock()
 	}()
 	delete(t.connMap, i)
+}
+
+func (t *TcpServer) KickConn(i types.IdType) {
+	defer utils.PrintPanicStack()
+	conn, ok := t.GetConn(i)
+	if ok {
+		t.DelConn(i)
+		conn.Close()
+	}
 }
 
 func (svr *TcpServer) Start() {
