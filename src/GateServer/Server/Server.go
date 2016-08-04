@@ -19,7 +19,6 @@ import (
 type TcpServer struct {
 	sync.Mutex
 	connMap map[types.IdType]*net.TCPConn
-	maxConn int32
 	ReadPackChan chan *pack.Pack
 	WritePackChan chan *pack.Pack
 }
@@ -33,7 +32,7 @@ func New() *TcpServer {
 }
 
 
-func (t *TcpServer) SetConnMap(i types.IdType, c *net.TCPConn) error {
+func (t *TcpServer) PutConn(i types.IdType, c *net.TCPConn) error {
 	t.Lock()
 	defer func() {
 		t.Unlock()
@@ -82,7 +81,7 @@ func (svr *TcpServer) Start() {
 		}
 
 		id  := rg.Get()
-		err = svr.SetConnMap(id, tcpConn)
+		err = svr.PutConn(id, tcpConn)
 		if err != nil {
 			tcpConn.Close()
 			gLog.Warn(err)
