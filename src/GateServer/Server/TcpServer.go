@@ -101,14 +101,14 @@ func (svr *TcpServer) Start() {
 			gLog.Warn(err)
 			continue
 		}
-		gLog.Info("connected : " + tcpConn.RemoteAddr().String())
+		gLog.Info("connected: " + tcpConn.RemoteAddr().String())
 		go tcpHandle(svr, id, tcpConn)
 	}
 }
 
 func tcpHandle(svr *TcpServer, id types.IdType, conn *net.TCPConn) {
 	defer func() {
-		gLog.Info("disconnected :" + conn.RemoteAddr().String())
+		gLog.Info("disconnected:" + conn.RemoteAddr().String())
 		conn.Close()
 		svr.DelConn(id)
 	}()
