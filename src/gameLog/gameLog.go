@@ -24,39 +24,43 @@ func init() {
 	logger = log.New(os.Stdout, "", log.Ldate | log.Ltime | log.Lmicroseconds | log.Llongfile)
 }
 
-func Debug(v ...interface{}) {
+func Debug(v interface{}) {
 	if logLevel.DEBUG >= level {
 		logger.Output(2, fmt.Sprintln("[DEBUG]", v))
 	}
 }
 
-func Info(v ...interface{}) {
+func Info(v interface{}) {
 	if logLevel.INFO >= level {
 		logger.Output(2, fmt.Sprintln("[INFO]", v))
 	}
 }
 
-func Warn(v ...interface{}) {
+func Warn(v interface{}) {
 	if logLevel.WARN >= level {
 		logger.Output(2, fmt.Sprintln("[WARN]", v))
 	}
 }
 
-func Error(v ...interface{}) {
+func Error(v interface{}) {
 	if logLevel.ERROR >= level {
 		logger.Output(2, fmt.Sprintln("[ERROR]", v))
 	}
 }
 
-func Panic(v ...interface{}) {
+func Panic(v interface{}) {
 	if logLevel.PANIC >= level {
 		logger.Output(5, fmt.Sprintln("[PANIC]", v))
 	}
 }
 
-func Fatal(v ...interface{}) {
+func Fatal(v interface{}) {
 	if logLevel.FATAL >= level {
 		logger.Output(2, fmt.Sprintln("[FATAL]", v))
 		os.Exit(1)
 	}
+}
+
+func Printf(format string, v ...interface{}){
+	logger.Output(5, fmt.Sprintf(format, v...))
 }
