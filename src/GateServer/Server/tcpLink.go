@@ -56,11 +56,14 @@ func (lk *TcpLink) PutBytes(b []byte) (err error) {
 	}()
 	////////////////////////////////////////////////////////////////////
 
-	//select {
-	//case lk.wtSyncChan <- b:
-	//	return nil
-	//case
-	//}
+	select {
+	case lk.wtSyncChan <- b:
+		err = nil
+		return
+	case <-time.After(time.Second * WRITE_PACK_SYNC_CHAN_TIMEOUT):
+		err = errors.New("put wtSyncChan timeout")
+		return
+	}
 
 	////////////////////////////////////////////////////////////////////
 	err = nil

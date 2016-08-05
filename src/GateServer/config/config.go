@@ -13,6 +13,7 @@ const(
 	TCP_READ_TIMEOUT = 600	// sec
 	TCP_WRITE_TIMEOUT = 300	// sec
 	WRITE_PACK_SYNC_CHAN_SIZE = 10
+	WRITE_PACK_SYNC_CHAN_TIMEOUT = 20 // sec
 	BROCASTING_SID = math.MaxInt64 // 这个和 SocketIdType 对应
 )
 
