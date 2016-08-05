@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"globalConfig"
 	logLevel "gameLog/level"
+	"bufio"
 )
 
 
@@ -15,13 +16,13 @@ var logger *log.Logger
 var level = globalConfig.LOG_LEVEL
 
 func init() {
-	//expFilePtr, err := os.OpenFile("E:/result.txt", os.O_CREATE | os.O_WRONLY, 0600)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return
-	//}
-	//fileWriter := bufio.NewWriter(expFilePtr)
-	logger = log.New(os.Stdout, "", log.Ldate | log.Ltime | log.Lmicroseconds | log.Llongfile)
+	expFilePtr, err := os.OpenFile("E:/result.txt", os.O_CREATE | os.O_WRONLY, 0600)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fileWriter := bufio.NewWriter(expFilePtr)
+	logger = log.New(fileWriter, "", log.Ldate | log.Ltime | log.Lmicroseconds | log.Llongfile)
 }
 
 func Debug(v interface{}) {

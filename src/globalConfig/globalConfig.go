@@ -5,5 +5,5 @@ import (
 )
 
 const (
-	LOG_LEVEL = logLevel.INFO
+	LOG_LEVEL = logLevel.DEBUG
 )

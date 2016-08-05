@@ -15,21 +15,18 @@ import (
 	"bytes"
 	"errors"
 	"time"
+	"GateServer/route"
 )
 
 type TcpServer struct {
-	sync.Mutex
+	sync.RWMutex
 	connMap map[types.IdType]*net.TCPConn
-	ReadPackChan chan *pack.Pack
-	WritePackChan chan *pack.Pack
 }
 
-func New() *TcpServer {
+func NewTcpServer() *TcpServer {
 	defer utils.PrintPanicStack()
 	svr := new(TcpServer)
 	svr.connMap = make(map[types.IdType]*net.TCPConn)
-	svr.ReadPackChan = make(chan *pack.Pack, PACK_CHAN_SIZE)
-	svr.WritePackChan = make(chan *pack.Pack, PACK_CHAN_SIZE)
 	return svr
 }
 
@@ -51,9 +48,11 @@ func (t *TcpServer) PutConn(i types.IdType, c *net.TCPConn) error {
 
 func (t *TcpServer) GetConn(i types.IdType) (*net.TCPConn, bool) {
 	defer utils.PrintPanicStack()
-	t.Lock()
+	t.RLock()
+	defer func() {
+		t.RUnlock()
+	}()
 	c, ok := t.connMap[i]
-	t.Unlock()
 	return c, ok
 }
 
@@ -207,9 +206,7 @@ func tcpHandle(svr *TcpServer, id types.IdType, conn *net.TCPConn) {
 				}
 
 				rbuf.RdIdx += dataSize64
-				p := pack.New(b)
-
-				svr.ReadPackChan <- p
+				route.Route(pack.New(id, b))
 				break
 			} else {// 没有，得填充缓冲区
 				if realRdIdx <= realWtIdx { //顺序情况
