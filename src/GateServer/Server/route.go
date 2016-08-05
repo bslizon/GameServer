@@ -54,16 +54,22 @@ func RouteOut(p *pack.Pack) (err error) {
 		for _, lk := range GateServer.linkMap {
 			err := lk.PutBytes(p.Data)
 			if err != nil {
-				gameLog.Warn(err)
+				gameLog.Warn(err)// 广播包不返回err
 			}
 		}
 	} else if p.Sid == 0 {// 为0的sid丢弃
 		gameLog.Warn(fmt.Sprintf("zero sid %#v", p.Data))
 	} else {
 		if lk, ok := GateServer.GetLink(p.Sid); ok {
-			lk.PutBytes(p.Data)
+			errr := lk.PutBytes(p.Data)
+			if errr != nil {
+				gameLog.Error(errr)
+				err = errors.New(errr.Error() + " put wtSyncChan failed.")
+				return
+			}
 		} else {
-			gameLog.Warn(fmt.Sprintf("link missing, a pack has benn drop. sid: %d data: %v. ", p.Sid, p.Data))
+			err = errors.New("invalid sid")
+			return
 		}
 	}
 
