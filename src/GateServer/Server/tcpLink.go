@@ -33,6 +33,8 @@ func NewTcpLink(sid SocketIdType, svr *TcpServer, co *net.TCPConn) *TcpLink {
 
 func (lk *TcpLink) Close() {
 	defer utils.PrintPanicStack()
+	////////////////////////////////////////////////////////////////////
+
 	lk.conn.Close()
 	gLog.Info(fmt.Sprintf("disconnected: %s socketid: %d mapCount: %d ", lk.conn.RemoteAddr().String(), lk.sid, len(lk.server.linkMap)))
 	close(lk.wtSyncChan)
@@ -52,12 +54,15 @@ func (lk *TcpLink) PutBytes(b []byte) (err error) {
 			}
 		}
 	}()
+	////////////////////////////////////////////////////////////////////
 
 	//select {
 	//case lk.wtSyncChan <- b:
 	//	return nil
 	//case
 	//}
+
+	////////////////////////////////////////////////////////////////////
 	err = nil
 	return
 }
@@ -68,6 +73,7 @@ func (lk *TcpLink) StartRead() {
 		lk.server.RemoveLink(lk.sid)
 	}()
 	defer utils.PrintPanicStack()
+	////////////////////////////////////////////////////////////////////
 
 	sizeBuf := make([]byte, PACK_DATA_SIZE_TYPE_LEN)
 
@@ -226,6 +232,7 @@ func (lk *TcpLink) StartWrite() {
 		lk.server.RemoveLink(lk.sid)
 	}()
 	defer utils.PrintPanicStack()
+	////////////////////////////////////////////////////////////////////
 
 	var wCount int
 	var rawDataSize int

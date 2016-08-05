@@ -37,6 +37,7 @@ func (svr *TcpServer) PutLink(i GSConfig.SocketIdType, lk *TcpLink) (err error) 
 			}
 		}
 	}()
+	////////////////////////////////////////////////////////////////////
 
 	if len(svr.linkMap) > MAX_TCP_CONN {
 		return errors.New("tcp conn limit")
@@ -51,13 +52,16 @@ func (svr *TcpServer) PutLink(i GSConfig.SocketIdType, lk *TcpLink) (err error) 
 		svr.Unlock()
 	}()
 	svr.linkMap[i] = lk
-	
+
+	////////////////////////////////////////////////////////////////////
 	err = nil
 	return
 }
 
 func (svr *TcpServer) GetLink(i GSConfig.SocketIdType) (*TcpLink, bool) {
 	defer utils.PrintPanicStack()
+	////////////////////////////////////////////////////////////////////
+
 	svr.RLock()
 	defer func() {
 		svr.RUnlock()
@@ -69,6 +73,8 @@ func (svr *TcpServer) GetLink(i GSConfig.SocketIdType) (*TcpLink, bool) {
 // 会关闭连接
 func (svr *TcpServer) RemoveLink(i GSConfig.SocketIdType) {
 	defer utils.PrintPanicStack()
+	////////////////////////////////////////////////////////////////////
+
 	lk, ok := svr.GetLink(i)
 	if ok {
 		svr.Lock()
@@ -109,6 +115,8 @@ func (svr *TcpServer) Start() {
 
 func handleTcpConn(svr *TcpServer, tcpConn *net.TCPConn) {
 	defer utils.PrintPanicStack()
+	////////////////////////////////////////////////////////////////////
+
 	sid  := g.Get()
 
 	lk := NewTcpLink(sid, svr, tcpConn)

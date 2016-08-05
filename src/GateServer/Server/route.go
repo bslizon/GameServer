@@ -22,10 +22,12 @@ func RouteIn(p *pack.Pack) (err error) {
 			}
 		}
 	}()
+	////////////////////////////////////////////////////////////////////
 
 	//gameLog.Debug(fmt.Sprintf("routing. sid: %d data: %v", p.Sid, p.Data))
 	RouteOut(p)
-	
+
+	////////////////////////////////////////////////////////////////////
 	err = nil
 	return
 }
@@ -45,6 +47,7 @@ func RouteOut(p *pack.Pack) (err error) {
 			}
 		}
 	}()
+	////////////////////////////////////////////////////////////////////
 
 	if lk, ok := GateServer.GetLink(p.Sid); ok {
 		lk.wtSyncChan <- p.Data
@@ -52,6 +55,7 @@ func RouteOut(p *pack.Pack) (err error) {
 		gameLog.Warn(fmt.Sprintf("link missing, a pack has benn drop. sid: %d data: %v. ", p.Sid, p.Data))
 	}
 
+	////////////////////////////////////////////////////////////////////
 	err = nil
 	return
 }
