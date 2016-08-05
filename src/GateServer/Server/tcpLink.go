@@ -2,7 +2,6 @@ package Server
 
 import (
 	"net"
-	"GateServer/route"
 	"time"
 	"GateServer/unPackRingBuffer"
 	"encoding/binary"
@@ -136,7 +135,7 @@ func (lk *TcpLink) StartRead() {
 				}
 
 				rbuf.RdIdx += dataSize64
-				route.RouteIn(pack.NewPack(lk.sid, b))
+				RouteIn(pack.NewPack(lk.sid, b))
 				break
 			} else {// 没有，得填充缓冲区
 				if realRdIdx <= realWtIdx { //顺序情况

@@ -1,4 +1,4 @@
-package route
+package Server
 
 import (
 	"GateServer/pack"
@@ -14,7 +14,7 @@ func RouteIn(p *pack.Pack) {
 
 // 必须保证是线程安全的
 func RouteOut(p *pack.Pack) {
-	if lk, ok := Instance.GateServer.GetLink(p.Sid); ok {
+	if lk, ok := GateServer.GetLink(p.Sid); ok {
 		lk.WtSyncChan <- p.Data
 	} else {
 		gameLog.Warn("a pack has benn drop " + fmt.Sprintf("sid: %v data: %v", p.Sid, p.Data))
