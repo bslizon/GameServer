@@ -90,7 +90,7 @@ func (svr *TcpServer) Start() {
 			continue
 		}
 
-		gLog.Info("connected: " + tcpConn.RemoteAddr().String() + "  " + strconv.Itoa(len(svr.linkMap)))
+		gLog.Info("connected: " + tcpConn.RemoteAddr().String() + " mapCount: "  + strconv.Itoa(len(svr.linkMap)))
 		go handleTcpConn(svr, tcpConn)
 	}
 }
