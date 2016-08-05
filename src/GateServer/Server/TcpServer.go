@@ -9,7 +9,6 @@ import (
 	. "GateServer/config"
 	"utils"
 	"errors"
-	"strconv"
 	"fmt"
 )
 
@@ -34,7 +33,7 @@ func (svr *TcpServer) PutLink(i GSConfig.SocketIdType, lk *TcpLink) (err error) 
 			case string:
 				err = errors.New(value)
 			default:
-				err = errors.New(fmt.Sprintf("unknown panic: %#v", value))
+				err = errors.New(fmt.Sprintf("unknown panic: %#v. ", value))
 			}
 		}
 	}()
@@ -77,7 +76,7 @@ func (svr *TcpServer) RemoveLink(i GSConfig.SocketIdType) {
 			svr.Unlock()
 		}()
 		delete(svr.linkMap, i)
-		gLog.Info("be removed: " + lk.conn.RemoteAddr().String() + " socketid: " + fmt.Sprintf("%d", lk.sid) + " " + " mapCount: " + strconv.Itoa(len(lk.server.linkMap)))
+		gLog.Info(fmt.Sprintf("has been removed: %s socketid: %d mapCount: %d ", lk.conn.RemoteAddr().String(), lk.sid, len(lk.server.linkMap)))
 		lk.Close()
 	}
 }
@@ -103,7 +102,7 @@ func (svr *TcpServer) Start() {
 			continue
 		}
 
-		gLog.Info("connected: " + tcpConn.RemoteAddr().String() + " mapCount: "  + strconv.Itoa(len(svr.linkMap)))
+		gLog.Info(fmt.Sprintf("connected: %s mapCount: %d", tcpConn.RemoteAddr().String(), len(svr.linkMap)))
 		go handleTcpConn(svr, tcpConn)
 	}
 }
@@ -116,11 +115,11 @@ func handleTcpConn(svr *TcpServer, tcpConn *net.TCPConn) {
 	err := svr.PutLink(sid, lk)
 	if err != nil {
 		lk.Close()
-		gLog.Warn(err.Error() + ", disconnected: " + lk.conn.RemoteAddr().String() + " socketid: " + fmt.Sprintf("%d", lk.sid) + " " + " mapCount: " + strconv.Itoa(len(lk.server.linkMap)))
+		gLog.Warn(fmt.Sprintf("%s disconnected: %s socketid: %d mapCount: %d ", err.Error(), lk.conn.RemoteAddr().String(), lk.sid, len(lk.server.linkMap)))
 		return
 	}
 
 	go lk.StartRead()
 	go lk.StartWrite()
-	gLog.Info("serving: " + tcpConn.RemoteAddr().String() + " socketid: " + fmt.Sprintf("%d", lk.sid) + " mapCount: " + strconv.Itoa(len(svr.linkMap)))
+	gLog.Info(fmt.Sprintf("serving: %s socketid: %d mapCount: %d ", tcpConn.RemoteAddr().String(),  lk.sid, len(lk.server.linkMap)))
 }

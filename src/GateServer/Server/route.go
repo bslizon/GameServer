@@ -18,12 +18,12 @@ func RouteIn(p *pack.Pack) (err error) {
 			case string:
 				err = errors.New(value)
 			default:
-				err = errors.New(fmt.Sprintf("unknown panic: %#v", value))
+				err = errors.New(fmt.Sprintf("unknown panic: %#v. ", value))
 			}
 		}
 	}()
 
-	//gameLog.Debug("routing: " + fmt.Sprintf("sid: %v data: %v", p.Sid, p.Data))
+	//gameLog.Debug(fmt.Sprintf("routing. sid: %d data: %v", p.Sid, p.Data))
 	RouteOut(p)
 	
 	err = nil
@@ -41,7 +41,7 @@ func RouteOut(p *pack.Pack) (err error) {
 			case string:
 				err = errors.New(value)
 			default:
-				err = errors.New(fmt.Sprintf("unknown panic: %#v", value))
+				err = errors.New(fmt.Sprintf("unknown panic: %#v ", value))
 			}
 		}
 	}()
@@ -49,7 +49,7 @@ func RouteOut(p *pack.Pack) (err error) {
 	if lk, ok := GateServer.GetLink(p.Sid); ok {
 		lk.wtSyncChan <- p.Data
 	} else {
-		gameLog.Warn("link missing, a pack has benn drop " + fmt.Sprintf("sid: %v data: %v", p.Sid, p.Data))
+		gameLog.Warn(fmt.Sprintf("link missing, a pack has benn drop. sid: %d data: %v. ", p.Sid, p.Data))
 	}
 
 	err = nil

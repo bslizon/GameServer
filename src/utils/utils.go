@@ -14,13 +14,13 @@ func PrintPanicStack() {
 		case string:
 			gLog.Panic(value)
 		default:
-			gLog.Printf("[PANIC] unknown panic: %#v", value)
+			gLog.Printf("[PANIC] unknown panic: %#v.", value)
 		}
 
 		i := 3
 		funcName, file, line, ok := runtime.Caller(i)
 		for ok {
-			gLog.Printf("[func:%v, file:%v, line:%v]\n", runtime.FuncForPC(funcName).Name(), file, line)
+			gLog.Printf("[func:%v, file:%v, line:%v]", runtime.FuncForPC(funcName).Name(), file, line)
 			i++
 			funcName, file, line, ok = runtime.Caller(i)
 		}

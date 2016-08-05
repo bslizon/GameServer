@@ -10,7 +10,6 @@ import (
 	"GateServer/pack"
 	"utils"
 	gLog "gameLog"
-	"strconv"
 	"fmt"
 	"io"
 	"errors"
@@ -35,7 +34,7 @@ func NewTcpLink(sid SocketIdType, svr *TcpServer, co *net.TCPConn) *TcpLink {
 func (lk *TcpLink) Close() {
 	defer utils.PrintPanicStack()
 	lk.conn.Close()
-	gLog.Info("disconnected: " + lk.conn.RemoteAddr().String() + " socketid: " + fmt.Sprintf("%d", lk.sid) + " " + " mapCount: " + strconv.Itoa(len(lk.server.linkMap)))
+	gLog.Info(fmt.Sprintf("disconnected: %s socketid: %d mapCount: %d ", lk.conn.RemoteAddr().String(), lk.sid, len(lk.server.linkMap)))
 	close(lk.wtSyncChan)
 }
 
@@ -49,7 +48,7 @@ func (lk *TcpLink) PutBytes(b []byte) (err error) {
 			case string:
 				err = errors.New(value)
 			default:
-				err = errors.New(fmt.Sprintf("unknown panic: %#v", value))
+				err = errors.New(fmt.Sprintf("unknown panic: %#v. ", value))
 			}
 		}
 	}()
