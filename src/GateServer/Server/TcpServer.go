@@ -10,6 +10,7 @@ import (
 	"utils"
 	"errors"
 	"strconv"
+	"fmt"
 )
 
 type TcpServer struct {
@@ -27,17 +28,23 @@ func NewTcpServer() *TcpServer {
 
 func (svr *TcpServer) PutLink(i GSConfig.SocketIdType, lk *TcpLink) error {
 	defer utils.PrintPanicStack()
+
+	if len(svr.linkMap) > MAX_TCP_CONN {
+		return errors.New("tcp conn limit")
+	}
+
+	if _, ok := svr.GetLink(i); ok {
+		return errors.New("sid conflict")
+	}
+
 	svr.Lock()
 	defer func() {
 		svr.Unlock()
 	}()
+	svr.linkMap[i] = lk
+	return nil
 
-	if len(svr.linkMap) < MAX_TCP_CONN {
-		svr.linkMap[i] = lk
-		return nil
-	} else {
-		return errors.New("tcp conn limit")
-	}
+
 }
 
 func (svr *TcpServer) GetLink(i GSConfig.SocketIdType) (*TcpLink, bool) {
@@ -102,9 +109,8 @@ func handleTcpConn(svr *TcpServer, tcpConn *net.TCPConn) {
 	lk := NewTcpLink(sid, svr, tcpConn)
 	err := svr.PutLink(sid, lk)
 	if err != nil {
-		lk.conn.Close()
-		close(lk.WtSyncChan)
-		gLog.Warn(err)
+		lk.Close()
+		gLog.Warn(err.Error() + ", disconnected: " + lk.conn.RemoteAddr().String() + " socketid: " + fmt.Sprintf("%d", lk.sid) + " " + " mapCount: " + strconv.Itoa(len(lk.server.linkMap)))
 		return
 	}
 
