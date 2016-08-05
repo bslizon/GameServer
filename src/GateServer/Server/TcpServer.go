@@ -43,8 +43,6 @@ func (svr *TcpServer) PutLink(i GSConfig.SocketIdType, lk *TcpLink) error {
 	}()
 	svr.linkMap[i] = lk
 	return nil
-
-
 }
 
 func (svr *TcpServer) GetLink(i GSConfig.SocketIdType) (*TcpLink, bool) {
