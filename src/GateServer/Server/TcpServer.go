@@ -4,73 +4,70 @@ import (
 	"net"
 	GSConfig "GateServer/config"
 	gLog "gameLog"
-	"GateServer/types"
-	rg "GateServer/randomIdGenerator"
+	g "GateServer/socketIdGenerator"
 	"sync"
-	"GateServer/unPackRingBuffer"
 	. "GateServer/config"
 	"utils"
-	"encoding/binary"
-	"GateServer/pack"
-	"bytes"
 	"errors"
-	"time"
-	"GateServer/route"
+	"strconv"
 )
 
 type TcpServer struct {
 	sync.RWMutex
-	connMap map[types.IdType]*net.TCPConn
+	linkMap map[GSConfig.SocketIdType]*TcpLink
 }
 
 func NewTcpServer() *TcpServer {
 	defer utils.PrintPanicStack()
 	svr := new(TcpServer)
-	svr.connMap = make(map[types.IdType]*net.TCPConn)
+	svr.linkMap = make(map[GSConfig.SocketIdType]*TcpLink)
 	return svr
 }
 
 
-func (t *TcpServer) PutConn(i types.IdType, c *net.TCPConn) error {
+func (svr *TcpServer) PutLink(i GSConfig.SocketIdType, lk *TcpLink) error {
 	defer utils.PrintPanicStack()
-	t.Lock()
+	svr.Lock()
 	defer func() {
-		t.Unlock()
+		svr.Unlock()
 	}()
 
-	if len(t.connMap) < MAX_TCP_CONN {
-		t.connMap[i] = c
+	if len(svr.linkMap) < MAX_TCP_CONN {
+		svr.linkMap[i] = lk
 		return nil
 	} else {
 		return errors.New("tcp conn limit")
 	}
 }
 
-func (t *TcpServer) GetConn(i types.IdType) (*net.TCPConn, bool) {
+func (svr *TcpServer) GetLink(i GSConfig.SocketIdType) (*TcpLink, bool) {
 	defer utils.PrintPanicStack()
-	t.RLock()
+	svr.RLock()
 	defer func() {
-		t.RUnlock()
+		svr.RUnlock()
 	}()
-	c, ok := t.connMap[i]
+	c, ok := svr.linkMap[i]
 	return c, ok
 }
 
-func (t *TcpServer) DelConn(i types.IdType) {
+// 仅仅只是从map移除，不关闭链接
+func (svr *TcpServer) DelLink(i GSConfig.SocketIdType) {
 	defer utils.PrintPanicStack()
-	t.Lock()
+
+	svr.Lock()
 	defer func() {
-		t.Unlock()
+		svr.Unlock()
 	}()
-	delete(t.connMap, i)
+	delete(svr.linkMap, i)
 }
 
-func (t *TcpServer) KickConn(i types.IdType) {
+// 会关闭连接
+func (svr *TcpServer) KickLink(i GSConfig.SocketIdType) {
 	defer utils.PrintPanicStack()
-	conn, ok := t.GetConn(i)
+	lk, ok := svr.GetLink(i)
 	if ok {
-		t.DelConn(i)
-		conn.Close()
+		svr.DelLink(i)
+		lk.Close()
 	}
 }
 
@@ -93,147 +90,25 @@ func (svr *TcpServer) Start() {
 			continue
 		}
 
-		id  := rg.Get()
-		err = svr.PutConn(id, tcpConn)
-		if err != nil {
-			tcpConn.Close()
-			gLog.Warn(err)
-			continue
-		}
-		gLog.Info("connected: " + tcpConn.RemoteAddr().String())
-		go tcpHandle(svr, id, tcpConn)
+		gLog.Info("connected: " + tcpConn.RemoteAddr().String() + "  " + strconv.Itoa(len(svr.linkMap)))
+		go handleTcpConn(svr, tcpConn)
 	}
 }
 
-func tcpHandle(svr *TcpServer, id types.IdType, conn *net.TCPConn) {
-	defer func() {
-		gLog.Info("disconnected:" + conn.RemoteAddr().String())
-		conn.Close()
-		svr.DelConn(id)
-	}()
+func handleTcpConn(svr *TcpServer, tcpConn *net.TCPConn) {
 	defer utils.PrintPanicStack()
+	sid  := g.Get()
 
-
-	sizeBuf := make([]byte, PACK_DATA_SIZE_TYPE_LEN)
-
-	var dataSize32 int32
-	var dataSize64 int64
-	var realRdIdx int64
-	var realWtIdx int64
-	rbuf := new(unPackRingBuffer.UnPackRingBuffer)
-
-	// 一开始先读一口再说
-	err := conn.SetReadDeadline(time.Now().Add(TCP_READ_TIMEOUT * time.Second))
+	lk := NewTcpLink(sid, svr, tcpConn)
+	err := svr.PutLink(sid, lk)
 	if err != nil {
-		panic(err)
+		lk.conn.Close()
+		close(lk.WtSyncChan)
+		gLog.Warn(err)
+		return
 	}
-	n,err := conn.Read(rbuf.Buf[:])
-	if err != nil {
-		panic(err)
-	}
-	rbuf.WtIdx += int64(n)
 
-	for {
-		// 判断是否已经存在一个整的size在缓冲区中
-		for {
-			realRdIdx = rbuf.RdIdx % RING_BUFFER_SIZE
-			realWtIdx = rbuf.WtIdx % RING_BUFFER_SIZE
-
-			if rbuf.WtIdx - rbuf.RdIdx >= PACK_DATA_SIZE_TYPE_LEN {// 有，取出来
-				realEndIdx := (rbuf.RdIdx + PACK_DATA_SIZE_TYPE_LEN) % RING_BUFFER_SIZE
-				if realRdIdx < realEndIdx {
-					copy(sizeBuf, rbuf.Buf[realRdIdx : realEndIdx])
-				} else {
-					copy(sizeBuf, rbuf.Buf[realRdIdx : ])
-					copy(sizeBuf[RING_BUFFER_SIZE - realRdIdx: ], rbuf.Buf[ : PACK_DATA_SIZE_TYPE_LEN - (RING_BUFFER_SIZE - realRdIdx)])
-				}
-				rbuf.RdIdx += PACK_DATA_SIZE_TYPE_LEN
-				break
-			} else {//没有，继续从conn读
-				if realRdIdx <= realWtIdx { //顺序情况
-					err := conn.SetReadDeadline(time.Now().Add(TCP_READ_TIMEOUT * time.Second))
-					if err != nil {
-						panic(err)
-					}
-					n, err := conn.Read(rbuf.Buf[realWtIdx : ])
-					if(err != nil) {
-						panic(err)
-					}
-
-					rbuf.WtIdx += int64(n)
-
-				} else if realRdIdx > realWtIdx {//间插情况
-					err := conn.SetReadDeadline(time.Now().Add(TCP_READ_TIMEOUT * time.Second))
-					if err != nil {
-						panic(err)
-					}
-					n, err := conn.Read(rbuf.Buf[realWtIdx : realRdIdx])
-					if(err != nil) {
-						panic(err)
-					}
-
-					rbuf.WtIdx += int64(n)
-				}
-			}
-		}
-
-		err := binary.Read(bytes.NewBuffer(sizeBuf), binary.BigEndian, &dataSize32)
-		if err != nil {
-			panic(err)
-		}
-		if dataSize32 > MAX_PACK_DATA_SIZE {
-			panic("pack data out of limit")
-		}else if dataSize32 <= 0 {
-			panic("pack data less than or equal 0")
-		}
-
-		dataSize64 = int64(dataSize32)
-
-		// 判断是否已经存在一个整的packdata在缓冲区中
-		for {
-			realRdIdx = rbuf.RdIdx % RING_BUFFER_SIZE
-			realWtIdx = rbuf.WtIdx % RING_BUFFER_SIZE
-
-			//已经有了，解析一个packdata出来
-			if rbuf.WtIdx - rbuf.RdIdx >= dataSize64 {
-				b := make([]byte, dataSize64)
-				realEndIdx := (rbuf.RdIdx + dataSize64) % RING_BUFFER_SIZE
-				if realRdIdx < realEndIdx {
-					copy(b, rbuf.Buf[realRdIdx : realEndIdx])
-				} else {
-					copy(b, rbuf.Buf[realRdIdx : ])
-					copy(b[RING_BUFFER_SIZE - realRdIdx: ], rbuf.Buf[ : dataSize64 - (RING_BUFFER_SIZE - realRdIdx)])
-				}
-
-				rbuf.RdIdx += dataSize64
-				route.Route(pack.New(id, b))
-				break
-			} else {// 没有，得填充缓冲区
-				if realRdIdx <= realWtIdx { //顺序情况
-					err := conn.SetReadDeadline(time.Now().Add(TCP_READ_TIMEOUT * time.Second))
-					if err != nil {
-						panic(err)
-					}
-					n, err := conn.Read(rbuf.Buf[realWtIdx : ])
-					if(err != nil) {
-						panic(err)
-					}
-
-					rbuf.WtIdx += int64(n)
-
-				} else if realRdIdx > realWtIdx {//间插情况
-					err := conn.SetReadDeadline(time.Now().Add(TCP_READ_TIMEOUT * time.Second))
-					if err != nil {
-						panic(err)
-					}
-					n, err := conn.Read(rbuf.Buf[realWtIdx : realRdIdx])
-					if(err != nil) {
-						panic(err)
-					}
-
-					rbuf.WtIdx += int64(n)
-				}
-			}
-		}
-	}
+	go lk.StartRead()
+	go lk.StartWrite()
+	gLog.Info("serving: " + tcpConn.RemoteAddr().String() +  " mapCount: " + strconv.Itoa(len(svr.linkMap)))
 }

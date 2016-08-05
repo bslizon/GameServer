@@ -1,14 +1,14 @@
-package randomIdGenerator
+package socketIdGenerator
 
 import (
-	"GateServer/types"
+	"GateServer/config"
 	"sync"
 )
 
-var nowId types.IdType
+var nowId config.SocketIdType
 var nowMutex sync.Mutex
 
-func Get() types.IdType {
+func Get() config.SocketIdType {
 	nowMutex.Lock()
 	nowId++
 	id := nowId

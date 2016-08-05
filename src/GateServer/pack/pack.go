@@ -1,16 +1,18 @@
 package pack
 
-import "GateServer/types"
+import (
+	"GateServer/config"
+)
 
 //数据包结构
 type Pack struct {
-	SocketId types.IdType
+	Sid  config.SocketIdType
 	Data []byte
 }
 
-func New(id types.IdType, b []byte) *Pack {
+func NewPack(id config.SocketIdType, b []byte) *Pack {
 	p := new(Pack)
-	p.SocketId = id
+	p.Sid = id
 	p.Data = b
 	return p
 }
