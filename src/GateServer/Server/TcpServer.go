@@ -19,12 +19,10 @@ type TcpServer struct {
 }
 
 func NewTcpServer() *TcpServer {
-	defer utils.PrintPanicStack()
 	svr := new(TcpServer)
 	svr.linkMap = make(map[GSConfig.SocketIdType]*TcpLink)
 	return svr
 }
-
 
 func (svr *TcpServer) PutLink(i GSConfig.SocketIdType, lk *TcpLink) error {
 	defer utils.PrintPanicStack()
@@ -55,7 +53,7 @@ func (svr *TcpServer) GetLink(i GSConfig.SocketIdType) (*TcpLink, bool) {
 	return c, ok
 }
 
-// 仅仅只是从map移除，不关闭链接
+// 仅仅只是从map移除，不关闭连接
 func (svr *TcpServer) DelLink(i GSConfig.SocketIdType) {
 	defer utils.PrintPanicStack()
 
@@ -87,6 +85,8 @@ func (svr *TcpServer) Start() {
 		gLog.Fatal(err)
 	}
 	defer tcpListener.Close()
+
+	gLog.Info("listen on: " + GSConfig.EXTERNAL_LISTEN_PORT)
 
 	for {
 		tcpConn, err := tcpListener.AcceptTCP()
