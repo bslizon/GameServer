@@ -57,7 +57,7 @@ func RouteOut(p *pack.Pack) (err error) {
 				gameLog.Warn(err)// 广播包不返回err
 			}
 		}
-	} else if p.Sid == 0 {// 为0的sid丢弃
+	} else if p.Sid == config.DROP_SID {// 丢弃
 		gameLog.Warn(fmt.Sprintf("zero sid %#v", p.Data))
 	} else {
 		if lk, ok := GateServer.GetLink(p.Sid); ok {
