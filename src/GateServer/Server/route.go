@@ -5,6 +5,7 @@ import (
 	"gameLog"
 	"fmt"
 	"errors"
+	"GateServer/config"
 )
 
 // 必须保证是线程安全的
@@ -49,10 +50,21 @@ func RouteOut(p *pack.Pack) (err error) {
 	}()
 	////////////////////////////////////////////////////////////////////
 
-	if lk, ok := GateServer.GetLink(p.Sid); ok {
-		lk.wtSyncChan <- p.Data
+	if p.Sid == config.BROCASTING_SID {
+		for _, lk := range GateServer.linkMap {
+			err := lk.PutBytes(p.Data)
+			if err != nil {
+				gameLog.Warn(err)
+			}
+		}
+	} else if p.Sid == 0 {// 为0的sid丢弃
+		gameLog.Warn(fmt.Sprintf("zero sid %#v", p.Data))
 	} else {
-		gameLog.Warn(fmt.Sprintf("link missing, a pack has benn drop. sid: %d data: %v. ", p.Sid, p.Data))
+		if lk, ok := GateServer.GetLink(p.Sid); ok {
+			lk.PutBytes(p.Data)
+		} else {
+			gameLog.Warn(fmt.Sprintf("link missing, a pack has benn drop. sid: %d data: %v. ", p.Sid, p.Data))
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////
