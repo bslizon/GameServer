@@ -13,13 +13,14 @@ import (
 	"strconv"
 	"fmt"
 	"io"
+	"errors"
 )
 
 type TcpLink struct {
 	sid        SocketIdType
 	server     *TcpServer
 	conn       *net.TCPConn
-	WtSyncChan chan []byte
+	wtSyncChan chan []byte
 }
 
 func NewTcpLink(sid SocketIdType, svr *TcpServer, co *net.TCPConn) *TcpLink {
@@ -27,7 +28,7 @@ func NewTcpLink(sid SocketIdType, svr *TcpServer, co *net.TCPConn) *TcpLink {
 	lk.sid = sid
 	lk.server = svr
 	lk.conn = co
-	lk.WtSyncChan = make(chan []byte, WRITE_PACK_SYNC_CHAN_SIZE)
+	lk.wtSyncChan = make(chan []byte, WRITE_PACK_SYNC_CHAN_SIZE)
 	return lk
 }
 
@@ -35,12 +36,37 @@ func (lk *TcpLink) Close() {
 	defer utils.PrintPanicStack()
 	lk.conn.Close()
 	gLog.Info("disconnected: " + lk.conn.RemoteAddr().String() + " socketid: " + fmt.Sprintf("%d", lk.sid) + " " + " mapCount: " + strconv.Itoa(len(lk.server.linkMap)))
-	close(lk.WtSyncChan)
+	close(lk.wtSyncChan)
 }
+
+func (lk *TcpLink) PutBytes(b []byte) (err error) {
+	// panic转error
+	defer func() {
+		if x := recover(); x != nil {
+			switch value := x.(type) {
+			case error:
+				err = value
+			case string:
+				err = errors.New(value)
+			default:
+				err = errors.New(fmt.Sprintf("unknown panic: %#v", value))
+			}
+		}
+	}()
+
+	//select {
+	//case lk.wtSyncChan <- b:
+	//	return nil
+	//case
+	//}
+	err = nil
+	return
+}
+
 
 func (lk *TcpLink) StartRead() {
 	defer func() {
-		lk.server.KickLink(lk.sid)
+		lk.server.RemoveLink(lk.sid)
 	}()
 	defer utils.PrintPanicStack()
 
@@ -151,7 +177,10 @@ func (lk *TcpLink) StartRead() {
 				}
 
 				rbuf.RdIdx += dataSize64
-				RouteIn(pack.NewPack(lk.sid, b))
+				err := RouteIn(pack.NewPack(lk.sid, b))
+				if err != nil {
+					gLog.Error(err)
+				}
 				break
 			} else {// 没有，得填充缓冲区
 				if realRdIdx <= realWtIdx { //顺序情况
@@ -195,13 +224,13 @@ func (lk *TcpLink) StartRead() {
 
 func (lk *TcpLink) StartWrite() {
 	defer func() {
-		lk.server.KickLink(lk.sid)
+		lk.server.RemoveLink(lk.sid)
 	}()
 	defer utils.PrintPanicStack()
 
 	var wCount int
 	var rawDataSize int
-	for rawData := range lk.WtSyncChan {
+	for rawData := range lk.wtSyncChan {
 		n := len(rawData)
 		if n <= 0 {
 			panic("write pack data less than or equal 0")

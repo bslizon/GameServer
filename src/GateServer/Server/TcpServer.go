@@ -24,8 +24,20 @@ func NewTcpServer() *TcpServer {
 	return svr
 }
 
-func (svr *TcpServer) PutLink(i GSConfig.SocketIdType, lk *TcpLink) error {
-	defer utils.PrintPanicStack()
+func (svr *TcpServer) PutLink(i GSConfig.SocketIdType, lk *TcpLink) (err error) {
+	// panic转error
+	defer func() {
+		if x := recover(); x != nil {
+			switch value := x.(type) {
+			case error:
+				err = value
+			case string:
+				err = errors.New(value)
+			default:
+				err = errors.New(fmt.Sprintf("unknown panic: %#v", value))
+			}
+		}
+	}()
 
 	if len(svr.linkMap) > MAX_TCP_CONN {
 		return errors.New("tcp conn limit")
@@ -40,7 +52,9 @@ func (svr *TcpServer) PutLink(i GSConfig.SocketIdType, lk *TcpLink) error {
 		svr.Unlock()
 	}()
 	svr.linkMap[i] = lk
-	return nil
+	
+	err = nil
+	return
 }
 
 func (svr *TcpServer) GetLink(i GSConfig.SocketIdType) (*TcpLink, bool) {
@@ -53,24 +67,17 @@ func (svr *TcpServer) GetLink(i GSConfig.SocketIdType) (*TcpLink, bool) {
 	return c, ok
 }
 
-// 仅仅只是从map移除，不关闭连接
-func (svr *TcpServer) DelLink(i GSConfig.SocketIdType) {
-	defer utils.PrintPanicStack()
-
-	svr.Lock()
-	defer func() {
-		svr.Unlock()
-	}()
-	delete(svr.linkMap, i)
-}
-
 // 会关闭连接
-func (svr *TcpServer) KickLink(i GSConfig.SocketIdType) {
+func (svr *TcpServer) RemoveLink(i GSConfig.SocketIdType) {
 	defer utils.PrintPanicStack()
 	lk, ok := svr.GetLink(i)
 	if ok {
-		svr.DelLink(i)
-		gLog.Info("be kicked: " + lk.conn.RemoteAddr().String() + " socketid: " + fmt.Sprintf("%d", lk.sid) + " " + " mapCount: " + strconv.Itoa(len(lk.server.linkMap)))
+		svr.Lock()
+		defer func() {
+			svr.Unlock()
+		}()
+		delete(svr.linkMap, i)
+		gLog.Info("be removed: " + lk.conn.RemoteAddr().String() + " socketid: " + fmt.Sprintf("%d", lk.sid) + " " + " mapCount: " + strconv.Itoa(len(lk.server.linkMap)))
 		lk.Close()
 	}
 }
