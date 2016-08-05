@@ -12,6 +12,7 @@ import (
 	gLog "gameLog"
 	"strconv"
 	"fmt"
+	"io"
 )
 
 type TcpLink struct {
@@ -33,13 +34,13 @@ func NewTcpLink(sid SocketIdType, svr *TcpServer, co *net.TCPConn) *TcpLink {
 func (lk *TcpLink) Close() {
 	defer utils.PrintPanicStack()
 	lk.conn.Close()
+	gLog.Info("disconnected: " + lk.conn.RemoteAddr().String() + " socketid: " + fmt.Sprintf("%d", lk.sid) + " " + " mapCount: " + strconv.Itoa(len(lk.server.linkMap)))
 	close(lk.WtSyncChan)
 }
 
 func (lk *TcpLink) StartRead() {
 	defer func() {
 		lk.server.KickLink(lk.sid)
-		gLog.Info("read fail, disconnected: " + lk.conn.RemoteAddr().String() + " socketid: " + fmt.Sprintf("%d", lk.sid) + " " + " mapCount: " + strconv.Itoa(len(lk.server.linkMap)))
 	}()
 	defer utils.PrintPanicStack()
 
@@ -58,7 +59,12 @@ func (lk *TcpLink) StartRead() {
 	}
 	n,err := lk.conn.Read(rbuf.Buf[:])
 	if err != nil {
-		panic(err)
+		if err == io.EOF {
+			gLog.Info("tcp read EOF")
+			return
+		} else {
+			panic(err)
+		}
 	}
 	rbuf.WtIdx += int64(n)
 
@@ -86,7 +92,12 @@ func (lk *TcpLink) StartRead() {
 					}
 					n, err := lk.conn.Read(rbuf.Buf[realWtIdx : ])
 					if(err != nil) {
-						panic(err)
+						if err == io.EOF {
+							gLog.Info("tcp read EOF")
+							return
+						} else {
+							panic(err)
+						}
 					}
 
 					rbuf.WtIdx += int64(n)
@@ -98,7 +109,12 @@ func (lk *TcpLink) StartRead() {
 					}
 					n, err := lk.conn.Read(rbuf.Buf[realWtIdx : realRdIdx])
 					if(err != nil) {
-						panic(err)
+						if err == io.EOF {
+							gLog.Info("tcp read EOF")
+							return
+						} else {
+							panic(err)
+						}
 					}
 
 					rbuf.WtIdx += int64(n)
@@ -145,7 +161,12 @@ func (lk *TcpLink) StartRead() {
 					}
 					n, err := lk.conn.Read(rbuf.Buf[realWtIdx : ])
 					if(err != nil) {
-						panic(err)
+						if err == io.EOF {
+							gLog.Info("tcp read EOF")
+							return
+						} else {
+							panic(err)
+						}
 					}
 
 					rbuf.WtIdx += int64(n)
@@ -157,7 +178,12 @@ func (lk *TcpLink) StartRead() {
 					}
 					n, err := lk.conn.Read(rbuf.Buf[realWtIdx : realRdIdx])
 					if(err != nil) {
-						panic(err)
+						if err == io.EOF {
+							gLog.Info("tcp read EOF")
+							return
+						} else {
+							panic(err)
+						}
 					}
 
 					rbuf.WtIdx += int64(n)
@@ -170,7 +196,6 @@ func (lk *TcpLink) StartRead() {
 func (lk *TcpLink) StartWrite() {
 	defer func() {
 		lk.server.KickLink(lk.sid)
-		gLog.Info("write fail, disconnected: " + lk.conn.RemoteAddr().String() + " socketid: " + fmt.Sprintf("%d", lk.sid) + " " + " mapCount: " + strconv.Itoa(len(lk.server.linkMap)))
 	}()
 	defer utils.PrintPanicStack()
 
@@ -208,6 +233,4 @@ func (lk *TcpLink) StartWrite() {
 			}
 		}
 	}
-
-	gLog.Info("WtSyncChan chan closed: " + lk.conn.RemoteAddr().String() + " mapCount: " + strconv.Itoa(len(lk.server.linkMap)))
 }

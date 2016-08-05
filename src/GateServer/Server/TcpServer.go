@@ -69,6 +69,7 @@ func (svr *TcpServer) KickLink(i GSConfig.SocketIdType) {
 	defer utils.PrintPanicStack()
 	lk, ok := svr.GetLink(i)
 	if ok {
+		gLog.Info("be kicked: " + lk.conn.RemoteAddr().String() + " socketid: " + fmt.Sprintf("%d", lk.sid) + " " + " mapCount: " + strconv.Itoa(len(lk.server.linkMap)))
 		svr.DelLink(i)
 		lk.Close()
 	}
