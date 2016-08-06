@@ -82,7 +82,7 @@ func (svr *TcpServer) RemoveLink(i GSConfig.SocketIdType) {
 			svr.Unlock()
 		}()
 		delete(svr.linkMap, i)
-		gLog.Info(fmt.Sprintf("has been removed: %s socketid: %d mapCount: %d ", lk.conn.RemoteAddr().String(), lk.sid, len(lk.server.linkMap)))
+		gLog.Info(fmt.Sprintf("has been removed: %s sid: %d mapCount: %d ", lk.conn.RemoteAddr().String(), lk.sid, len(lk.server.linkMap)))
 		lk.Close()
 	}
 }
@@ -108,7 +108,7 @@ func (svr *TcpServer) Start() {
 			continue
 		}
 
-		gLog.Info(fmt.Sprintf("connected: %s mapCount: %d", tcpConn.RemoteAddr().String(), len(svr.linkMap)))
+		gLog.Info(fmt.Sprintf("connected: %s mapCount: %d ", tcpConn.RemoteAddr().String(), len(svr.linkMap)))
 		go handleTcpConn(svr, tcpConn)
 	}
 }
@@ -123,11 +123,11 @@ func handleTcpConn(svr *TcpServer, tcpConn *net.TCPConn) {
 	err := svr.PutLink(sid, lk)
 	if err != nil {
 		lk.Close()
-		gLog.Warn(fmt.Sprintf("%s disconnected: %s socketid: %d mapCount: %d ", err.Error(), lk.conn.RemoteAddr().String(), lk.sid, len(lk.server.linkMap)))
+		gLog.Warn(fmt.Sprintf("%s disconnected: %s sid: %d mapCount: %d ", err.Error(), lk.conn.RemoteAddr().String(), lk.sid, len(lk.server.linkMap)))
 		return
 	}
 
 	go lk.StartRead()
 	go lk.StartWrite()
-	gLog.Info(fmt.Sprintf("serving: %s socketid: %d mapCount: %d ", tcpConn.RemoteAddr().String(),  lk.sid, len(lk.server.linkMap)))
+	gLog.Info(fmt.Sprintf("serving: %s sid: %d mapCount: %d ", tcpConn.RemoteAddr().String(),  lk.sid, len(lk.server.linkMap)))
 }

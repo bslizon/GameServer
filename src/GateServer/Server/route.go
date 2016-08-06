@@ -25,9 +25,9 @@ func RouteIn(p *pack.Pack) (err error) {
 	}()
 	////////////////////////////////////////////////////////////////////
 
-	//gameLog.Debug(fmt.Sprintf("routing. sid: %d data: %v", p.Sid, p.Data))
-	RouteOut(p)
 
+	RouteOut(p)
+	gameLog.Debug(fmt.Sprintf("routing. sid: %d data: %v", p.Sid, p.Data))
 	////////////////////////////////////////////////////////////////////
 	err = nil
 	return
@@ -58,7 +58,7 @@ func RouteOut(p *pack.Pack) (err error) {
 			}
 		}
 	} else if p.Sid == config.DROP_SID {// 丢弃
-		gameLog.Warn(fmt.Sprintf("zero sid %#v", p.Data))
+		gameLog.Warn(fmt.Sprintf("zero sid %#v ", p.Data))
 	} else {
 		if lk, ok := GateServer.GetLink(p.Sid); ok {
 			errr := lk.PutBytes(p.Data)

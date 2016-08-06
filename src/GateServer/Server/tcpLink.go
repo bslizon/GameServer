@@ -36,7 +36,7 @@ func (lk *TcpLink) Close() {
 	////////////////////////////////////////////////////////////////////
 
 	lk.conn.Close()
-	gLog.Info(fmt.Sprintf("disconnected: %s socketid: %d mapCount: %d ", lk.conn.RemoteAddr().String(), lk.sid, len(lk.server.linkMap)))
+	gLog.Info(fmt.Sprintf("disconnected: %s sid: %d mapCount: %d ", lk.conn.RemoteAddr().String(), lk.sid, len(lk.server.linkMap)))
 	close(lk.wtSyncChan)
 }
 
@@ -94,7 +94,7 @@ func (lk *TcpLink) StartRead() {
 	n,err := lk.conn.Read(rbuf.Buf[:])
 	if err != nil {
 		if err == io.EOF {
-			gLog.Info("tcp read EOF")
+			gLog.Info(fmt.Sprintf("tcp read EOF. sid: %d ", lk.sid))
 			return
 		} else {
 			panic(err)
@@ -127,7 +127,7 @@ func (lk *TcpLink) StartRead() {
 					n, err := lk.conn.Read(rbuf.Buf[realWtIdx : ])
 					if(err != nil) {
 						if err == io.EOF {
-							gLog.Info("tcp read EOF")
+							gLog.Info(fmt.Sprintf("tcp read EOF. sid: %d ", lk.sid))
 							return
 						} else {
 							panic(err)
@@ -144,7 +144,7 @@ func (lk *TcpLink) StartRead() {
 					n, err := lk.conn.Read(rbuf.Buf[realWtIdx : realRdIdx])
 					if(err != nil) {
 						if err == io.EOF {
-							gLog.Info("tcp read EOF")
+							gLog.Info(fmt.Sprintf("tcp read EOF. sid: %d ", lk.sid))
 							return
 						} else {
 							panic(err)
@@ -199,7 +199,7 @@ func (lk *TcpLink) StartRead() {
 					n, err := lk.conn.Read(rbuf.Buf[realWtIdx : ])
 					if(err != nil) {
 						if err == io.EOF {
-							gLog.Info("tcp read EOF")
+							gLog.Info(fmt.Sprintf("tcp read EOF. sid: %d ", lk.sid))
 							return
 						} else {
 							panic(err)
@@ -216,7 +216,7 @@ func (lk *TcpLink) StartRead() {
 					n, err := lk.conn.Read(rbuf.Buf[realWtIdx : realRdIdx])
 					if(err != nil) {
 						if err == io.EOF {
-							gLog.Info("tcp read EOF")
+							gLog.Info(fmt.Sprintf("tcp read EOF. sid: %d ", lk.sid))
 							return
 						} else {
 							panic(err)
