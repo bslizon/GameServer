@@ -5,6 +5,6 @@ import (
 )
 
 func main() {
-	Server.GateServer = Server.NewTcpServer()
+	Server.GateServer = Server.NewTcpPackServer()
 	Server.GateServer.Start()
 }

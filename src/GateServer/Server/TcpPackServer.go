@@ -2,28 +2,27 @@ package Server
 
 import (
 	"net"
-	GSConfig "GateServer/config"
 	gLog "gameLog"
 	g "GateServer/socketIdGenerator"
 	"sync"
-	. "GateServer/config"
+	"GateServer/config"
 	"utils"
 	"errors"
 	"fmt"
 )
 
-type TcpServer struct {
+type TcpPackServer struct {
 	sync.RWMutex
-	linkMap map[GSConfig.SocketIdType]*TcpLink
+	linkMap map[config.SocketIdType]*tcpPackLink
 }
 
-func NewTcpServer() *TcpServer {
-	svr := new(TcpServer)
-	svr.linkMap = make(map[GSConfig.SocketIdType]*TcpLink)
+func NewTcpPackServer() *TcpPackServer {
+	svr := new(TcpPackServer)
+	svr.linkMap = make(map[config.SocketIdType]*tcpPackLink)
 	return svr
 }
 
-func (svr *TcpServer) PutLink(i GSConfig.SocketIdType, lk *TcpLink) (err error) {
+func (svr *TcpPackServer) PutLink(i config.SocketIdType, lk *tcpPackLink) (err error) {
 	// panic转error
 	defer func() {
 		if x := recover(); x != nil {
@@ -39,7 +38,7 @@ func (svr *TcpServer) PutLink(i GSConfig.SocketIdType, lk *TcpLink) (err error) 
 	}()
 	////////////////////////////////////////////////////////////////////
 
-	if len(svr.linkMap) > MAX_TCP_CONN {
+	if len(svr.linkMap) > config.MAX_TCP_CONN {
 		return errors.New("tcp conn limit")
 	}
 
@@ -58,7 +57,7 @@ func (svr *TcpServer) PutLink(i GSConfig.SocketIdType, lk *TcpLink) (err error) 
 	return
 }
 
-func (svr *TcpServer) GetLink(i GSConfig.SocketIdType) (*TcpLink, bool) {
+func (svr *TcpPackServer) GetLink(i config.SocketIdType) (*tcpPackLink, bool) {
 	defer utils.PrintPanicStack()
 	////////////////////////////////////////////////////////////////////
 
@@ -71,7 +70,7 @@ func (svr *TcpServer) GetLink(i GSConfig.SocketIdType) (*TcpLink, bool) {
 }
 
 // 会关闭连接
-func (svr *TcpServer) RemoveLink(i GSConfig.SocketIdType) {
+func (svr *TcpPackServer) RemoveLink(i config.SocketIdType) {
 	defer utils.PrintPanicStack()
 	////////////////////////////////////////////////////////////////////
 
@@ -87,8 +86,8 @@ func (svr *TcpServer) RemoveLink(i GSConfig.SocketIdType) {
 	}
 }
 
-func (svr *TcpServer) Start() {
-	tcpAddr, err := net.ResolveTCPAddr("tcp", ":" + GSConfig.EXTERNAL_LISTEN_PORT)
+func (svr *TcpPackServer) Start() {
+	tcpAddr, err := net.ResolveTCPAddr("tcp", ":" + config.EXTERNAL_LISTEN_PORT)
 	if err != nil {
 		gLog.Fatal(err)
 	}
@@ -99,7 +98,7 @@ func (svr *TcpServer) Start() {
 	}
 	defer tcpListener.Close()
 
-	gLog.Info("listen on: " + GSConfig.EXTERNAL_LISTEN_PORT)
+	gLog.Info("listen on: " + config.EXTERNAL_LISTEN_PORT)
 
 	for {
 		tcpConn, err := tcpListener.AcceptTCP()
@@ -109,17 +108,17 @@ func (svr *TcpServer) Start() {
 		}
 
 		gLog.Info(fmt.Sprintf("connected: %s mapCount: %d ", tcpConn.RemoteAddr().String(), len(svr.linkMap)))
-		go handleTcpConn(svr, tcpConn)
+		go svr.handleTcpConn(tcpConn)
 	}
 }
 
-func handleTcpConn(svr *TcpServer, tcpConn *net.TCPConn) {
+func (svr *TcpPackServer) handleTcpConn(tcpConn *net.TCPConn) {
 	defer utils.PrintPanicStack()
 	////////////////////////////////////////////////////////////////////
 
 	sid  := g.Get()
 
-	lk := NewTcpLink(sid, svr, tcpConn)
+	lk := NewPackLink(sid, svr, tcpConn)
 	err := svr.PutLink(sid, lk)
 	if err != nil {
 		lk.Close()
@@ -127,7 +126,7 @@ func handleTcpConn(svr *TcpServer, tcpConn *net.TCPConn) {
 		return
 	}
 
-	go lk.StartRead()
-	go lk.StartWrite()
+	go lk.StartReadPack()
+	go lk.StartWritePack()
 	gLog.Info(fmt.Sprintf("serving: %s sid: %d mapCount: %d ", tcpConn.RemoteAddr().String(),  lk.sid, len(lk.server.linkMap)))
 }

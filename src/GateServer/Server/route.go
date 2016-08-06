@@ -2,14 +2,14 @@ package Server
 
 import (
 	"GateServer/pack"
-	"gameLog"
+	gLog "gameLog"
 	"fmt"
 	"errors"
 	"GateServer/config"
 )
 
 // 必须保证是线程安全的
-func RouteIn(p *pack.Pack) (err error) {
+func (svr *TcpPackServer) RoutePackIn(p *pack.Pack) (err error) {
 	// panic转error
 	defer func() {
 		if x := recover(); x != nil {
@@ -26,15 +26,15 @@ func RouteIn(p *pack.Pack) (err error) {
 	////////////////////////////////////////////////////////////////////
 
 
-	RouteOut(p)
-	gameLog.Debug(fmt.Sprintf("routing. sid: %d data: %v", p.Sid, p.Data))
+	svr.RoutePackOut(p)
+	gLog.Debug(fmt.Sprintf("routing. sid: %d data: %v", p.Sid, p.Data))
 	////////////////////////////////////////////////////////////////////
 	err = nil
 	return
 }
 
 // 必须保证是线程安全的
-func RouteOut(p *pack.Pack) (err error) {
+func (svr *TcpPackServer) RoutePackOut(p *pack.Pack) (err error) {
 	// panic转error
 	defer func() {
 		if x := recover(); x != nil {
@@ -51,24 +51,24 @@ func RouteOut(p *pack.Pack) (err error) {
 	////////////////////////////////////////////////////////////////////
 
 	if p.Sid == config.BROCASTING_SID {
-		for _, lk := range GateServer.linkMap {
+		for _, lk := range svr.linkMap {
 			err := lk.PutBytes(p.Data)
 			if err != nil {
-				gameLog.Warn(err)// 广播包不返回err
+				gLog.Warn(err)// 广播包不返回err
 			}
 		}
 	} else if p.Sid == config.DROP_SID {// 丢弃
-		gameLog.Warn(fmt.Sprintf("zero sid %#v ", p.Data))
+		gLog.Warn(fmt.Sprintf("zero sid %#v ", p.Data))
 	} else {
-		if lk, ok := GateServer.GetLink(p.Sid); ok {
+		if lk, ok := svr.GetLink(p.Sid); ok {
 			errr := lk.PutBytes(p.Data)
 			if errr != nil {
-				gameLog.Error(errr)
+				gLog.Error(errr)
 				err = errors.New(errr.Error() + " put wtSyncChan failed.")
 				return
 			}
 		} else {
-			err = errors.New("invalid sid")
+			err = errors.New("invalid sid.")
 			return
 		}
 	}

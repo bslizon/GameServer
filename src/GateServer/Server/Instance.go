@@ -1,3 +1,3 @@
 package Server
 
-var GateServer *TcpServer
+var GateServer *TcpPackServer
