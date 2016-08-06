@@ -15,9 +15,8 @@ const(
 	TCP_WRITE_TIMEOUT = 300	// sec
 
 	//进出协议的规格，尺寸以及解析相关
-	PACK_DATA_SIZE_TYPE_LEN = 4	// sizeof(MAX_INBOUND_PACK_DATA_SIZE)
-	MAX_INBOUND_PACK_DATA_SIZE = 1 << 14	// 16KB
-	RING_BUFFER_SIZE = 2 * MAX_INBOUND_PACK_DATA_SIZE
+	PACK_DATA_SIZE_TYPE_LEN = 4	// sizeof(PackDataSizeType)
+	MAX_INBOUND_PACK_DATA_SIZE = 1 << 14	// 16KB PackDataSizeType表示
 	MAX_OUTBOUND_PACK_DATA_SIZE = 1 << 20	// 1MB
 
 	//TcpLink接收chan相关参数
@@ -25,8 +24,12 @@ const(
 	WRITE_PACK_SYNC_CHAN_TIMEOUT = 20 // sec
 
 	//sid相关
-	BROCASTING_SID = math.MaxInt64 // 这个和 SocketIdType 对应
+	BROCASTING_SID = math.MaxUint64 // 这个和 SocketIdType 对应
 	DROP_SID = 0
+
+	//性能分析相关
+	PROFILE_FILE = "E:/GateServerProfile.prof"
 )
 
-type SocketIdType int64 // 这个和 BROCASTING_SID 对应
+type SocketIdType uint64 // 这个和 BROCASTING_SID 对应
+type PackDataSizeType int32 // 关系到 PACK_DATA_SIZE_TYPE_LEN
