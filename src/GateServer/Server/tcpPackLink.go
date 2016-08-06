@@ -4,7 +4,6 @@ import (
 	"net"
 	"time"
 	"encoding/binary"
-	"bytes"
 	. "GateServer/config"
 	"GateServer/pack"
 	"utils"
@@ -79,9 +78,9 @@ func (lk *tcpPackLink) StartReadPack() {
 
 
 	sizeBuf := make([]byte, PACK_DATA_SIZE_TYPE_LEN)
-	var dataSize PackDataSizeType
-	var sizeBufIdx PackDataSizeType
-	var dataBufIdx PackDataSizeType
+	var dataSize uint32
+	var sizeBufIdx uint32
+	var dataBufIdx uint32
 	for {
 		sizeBufIdx = 0
 		for {
@@ -98,24 +97,19 @@ func (lk *tcpPackLink) StartReadPack() {
 					panic(err)
 				}
 			}
-			sizeBufIdx += PackDataSizeType(n)
+			sizeBufIdx += uint32(n)
 			if sizeBufIdx == PACK_DATA_SIZE_TYPE_LEN {
 				break
-			} else if sizeBufIdx < PACK_DATA_SIZE_TYPE_LEN && sizeBufIdx > 0 {
-				continue
-			} else {
-				panic("sizeBufIdx error.")
+			} else if sizeBufIdx > PACK_DATA_SIZE_TYPE_LEN || sizeBufIdx < 0 {
+				panic("read pack data size error.")
 			}
 		}
 
-		err := binary.Read(bytes.NewBuffer(sizeBuf), binary.BigEndian, &dataSize)
-		if err != nil {
-			panic(err)
-		}
+		dataSize = binary.BigEndian.Uint32(sizeBuf)
 		if dataSize > MAX_INBOUND_PACK_DATA_SIZE {
 			panic("read pack data out of limit.")
-		}else if dataSize <= 0 {
-			panic("read pack data less than or equal 0.")
+		}else if dataSize == 0 {
+			panic("read pack data size equals 0.")
 		}
 
 		dataBufIdx = 0
@@ -135,15 +129,13 @@ func (lk *tcpPackLink) StartReadPack() {
 				}
 			}
 
-			dataBufIdx += PackDataSizeType(n)
+			dataBufIdx += uint32(n)
 
 			if dataBufIdx == dataSize {
 				lk.server.RoutePackIn(pack.NewPack(lk.sid, data))
 				break
-			} else if dataBufIdx < dataSize && dataBufIdx > 0 {
-				continue
-			} else {
-				panic("dataBufIdx error.")
+			}  else if dataBufIdx > dataSize || dataBufIdx < 0 {
+				panic("read pack data error.")
 			}
 		}
 
@@ -157,37 +149,59 @@ func (lk *tcpPackLink) StartWritePack() {
 	defer utils.PrintPanicStack()
 	////////////////////////////////////////////////////////////////////
 
-	var wCount int
-	var rawDataSize int
+	var dataSize uint32
+	var sizeBufIdx uint32
+	var dataBufIdx uint32
 	for rawData := range lk.wtSyncChan {
 		n := len(rawData)
-		if n <= 0 {
-			panic("write pack data less than or equals 0.")
-		} else if n > MAX_OUTBOUND_PACK_DATA_SIZE {
+		if n > MAX_OUTBOUND_PACK_DATA_SIZE {
 			panic("write pack data out of limit.")
+		} else if n == 0 {
+			panic("write pack data size equals 0.")
 		}
-		rawDataSize = PACK_DATA_SIZE_TYPE_LEN + n
-		data := make([]byte, rawDataSize)
-		binary.BigEndian.PutUint32(data, uint32(n))
-		copy(data[PACK_DATA_SIZE_TYPE_LEN:], rawData)
 
-		wCount = 0
+		dataSize = uint32(n)
+		sizeBytes := make([]byte, PACK_DATA_SIZE_TYPE_LEN)
+		binary.BigEndian.PutUint32(sizeBytes, uint32(n))
+
+		sizeBufIdx = 0
 		for {
 			err := lk.conn.SetWriteDeadline(time.Now().Add(TCP_WRITE_TIMEOUT * time.Second))
 			if err != nil {
 				panic(err)
 			}
 
-			wn, err := lk.conn.Write(data)
+			n, err := lk.conn.Write(sizeBytes[sizeBufIdx:])
 			if(err != nil) {
 				panic(err)
 			}
 
-			wCount += wn
-			if wCount == rawDataSize {
+			sizeBufIdx += uint32(n)
+			if sizeBufIdx == PACK_DATA_SIZE_TYPE_LEN {
 				break
-			} else if wCount > rawDataSize {
-				panic("write byte count error.")
+			} else if sizeBufIdx > PACK_DATA_SIZE_TYPE_LEN {
+				panic("write pack data size error.")
+			}
+		}
+
+		dataBufIdx = 0
+		for {
+			err := lk.conn.SetWriteDeadline(time.Now().Add(TCP_WRITE_TIMEOUT * time.Second))
+			if err != nil {
+				panic(err)
+			}
+
+			n, err := lk.conn.Write(rawData)
+			if(err != nil) {
+				panic(err)
+			}
+
+			dataBufIdx += uint32(n)
+
+			if dataBufIdx == dataSize {
+				break
+			} else if dataBufIdx > dataSize || dataBufIdx < 0 {
+				panic("write pack data error.")
 			}
 		}
 	}
