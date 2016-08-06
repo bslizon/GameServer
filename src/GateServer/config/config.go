@@ -15,8 +15,8 @@ const(
 	TCP_WRITE_TIMEOUT = 300	// sec
 
 	//进出协议的规格，尺寸以及解析相关
-	PACK_DATA_SIZE_TYPE_LEN = 4	// sizeof(PackDataSizeType)
-	MAX_INBOUND_PACK_DATA_SIZE = 1 << 14	// 16KB PackDataSizeType表示
+	PACK_DATA_SIZE_TYPE_LEN = 4	// sizeof(MAX_INBOUND_PACK_DATA_SIZE)
+	MAX_INBOUND_PACK_DATA_SIZE = 1 << 14	// 16KB uint32表示
 	MAX_OUTBOUND_PACK_DATA_SIZE = 1 << 20	// 1MB
 
 	//TcpLink接收chan相关参数
@@ -32,4 +32,3 @@ const(
 )
 
 type SocketIdType uint64 // 这个和 BROCASTING_SID 对应
-type PackDataSizeType int32 // 关系到 PACK_DATA_SIZE_TYPE_LEN
