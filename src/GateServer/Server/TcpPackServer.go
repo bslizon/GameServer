@@ -86,6 +86,22 @@ func (svr *TcpPackServer) RemoveLink(i config.SocketIdType) {
 	}
 }
 
+// 复制一份linkMap，用于广播
+func (svr *TcpPackServer) GetLinkMapCopy() map[config.SocketIdType]*tcpPackLink {
+	defer utils.PrintPanicStack()
+	////////////////////////////////////////////////////////////////////
+
+	linkMap := make(map[config.SocketIdType]*tcpPackLink)
+	svr.RWMutex.Lock()
+	defer func() {
+		svr.RWMutex.Unlock()
+	}()
+	for k, v := range svr.linkMap {
+		linkMap[k] = v
+	}
+	return linkMap
+}
+
 func (svr *TcpPackServer) Start() {
 	tcpAddr, err := net.ResolveTCPAddr("tcp", ":" + config.EXTERNAL_LISTEN_PORT)
 	if err != nil {
