@@ -78,3 +78,7 @@ func Fatal(v interface{}) {
 func Printf(format string, v ...interface{}){
 	logger.Output(5, fmt.Sprintf(format, v...))
 }
+
+func Flush() error {
+	return logFileWriter.Flush()
+}

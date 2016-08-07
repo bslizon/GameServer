@@ -22,6 +22,7 @@ func main() {
 	signal.Notify(c, syscall.SIGINT)
 	select {
 	case <- c:
-		gameLog.Info("server stop.")
+		gameLog.Info("receive INT signal, server stop.")
+		gameLog.Flush()
 	}
 }
