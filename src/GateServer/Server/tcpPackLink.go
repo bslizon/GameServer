@@ -75,7 +75,7 @@ func (lk *tcpPackLink) StartReadPack() {
 	}()
 	defer utils.PrintPanicStack()
 	////////////////////////////////////////////////////////////////////
-
+	
 
 	sizeBuf := make([]byte, PACK_DATA_SIZE_TYPE_LEN)
 	var dataSize uint32
