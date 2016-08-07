@@ -30,11 +30,15 @@ func NewPackLink(sid SocketIdType, svr *TcpPackServer, co *net.TCPConn) *tcpPack
 }
 
 func (lk *tcpPackLink) Close() {
+	defer func() {
+	gLog.Info(fmt.Sprintf("disconnected: %s sid: %d mapCount: %d ", lk.conn.RemoteAddr().String(), lk.sid, len(lk.server.linkMap)))
+	}()
 	defer utils.PrintPanicStack()
 	////////////////////////////////////////////////////////////////////
 
+
+
 	lk.conn.Close()
-	gLog.Info(fmt.Sprintf("disconnected: %s sid: %d mapCount: %d ", lk.conn.RemoteAddr().String(), lk.sid, len(lk.server.linkMap)))
 	close(lk.wtSyncChan)
 }
 
