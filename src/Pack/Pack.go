@@ -1,4 +1,4 @@
-package pack
+package Pack
 
 import (
 	"GateServer/config"

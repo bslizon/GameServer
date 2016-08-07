@@ -1,7 +1,7 @@
 package Server
 
 import (
-	"GateServer/pack"
+	"Pack"
 	gLog "gameLog"
 	"fmt"
 	"errors"
@@ -9,7 +9,7 @@ import (
 )
 
 // 必须保证是线程安全的
-func (svr *TcpPackServer) RoutePackIn(p *pack.Pack) (err error) {
+func (svr *TcpPackServer) RoutePackIn(p *Pack.Pack) (err error) {
 	// panic转error
 	defer func() {
 		if x := recover(); x != nil {
@@ -33,7 +33,7 @@ func (svr *TcpPackServer) RoutePackIn(p *pack.Pack) (err error) {
 }
 
 // 必须保证是线程安全的
-func (svr *TcpPackServer) RoutePackOut(p *pack.Pack) (err error) {
+func (svr *TcpPackServer) RoutePackOut(p *Pack.Pack) (err error) {
 	// panic转error
 	defer func() {
 		if x := recover(); x != nil {

@@ -5,7 +5,7 @@ import (
 	"time"
 	"encoding/binary"
 	. "GateServer/config"
-	"GateServer/pack"
+	"Pack"
 	"utils"
 	gLog "gameLog"
 	"fmt"
@@ -135,7 +135,7 @@ func (lk *tcpPackLink) StartReadPack() {
 			dataBufIdx += uint32(n)
 
 			if dataBufIdx == dataSize {
-				lk.server.RoutePackIn(pack.NewPack(lk.sid, data))
+				lk.server.RoutePackIn(Pack.NewPack(lk.sid, data))
 				break
 			}  else if dataBufIdx > dataSize || dataBufIdx < 0 {
 				panic("read pack data error.")

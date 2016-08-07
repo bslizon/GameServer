@@ -2,10 +2,13 @@ package main
 
 import (
 	"GateServer/Server"
-	//"os"
+	"os/signal"
+	"os"
 	//"runtime/pprof"
 	//"GateServer/config"
 	//"time"
+	"syscall"
+	"gameLog"
 )
 
 func main() {
@@ -13,9 +16,12 @@ func main() {
 	//pprof.StartCPUProfile(f)  // 开始cpu profile，结果写到文件f中
 	//defer pprof.StopCPUProfile()  // 结束profile
 	Server.GateServer = Server.NewTcpPackServer()
-	Server.GateServer.Start()
+	go Server.GateServer.Start()
 
-	//select {
-	//case <-time.After(30 * time.Second):
-	//}
+	c := make(chan os.Signal, 10)
+	signal.Notify(c, syscall.SIGINT)
+	select {
+	case <- c:
+		gameLog.Info("server stop.")
+	}
 }

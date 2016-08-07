@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 	"fmt"
-	"globalConfig"
+	"GlobalConfig"
 	logLevel "gameLog/level"
 	"bufio"
 )
@@ -13,11 +13,11 @@ var logFileWriter *bufio.Writer
 var logger *log.Logger
 
 //log输出等级
-var level = globalConfig.LOG_LEVEL
+var level = GlobalConfig.LOG_LEVEL
 
 func init() {
-	if globalConfig.USE_LOG_FILE {
-		expFilePtr, err := os.OpenFile(globalConfig.GATESERVER_LOG_FILE_PATH, os.O_CREATE | os.O_WRONLY, 0600)
+	if GlobalConfig.USE_LOG_FILE {
+		expFilePtr, err := os.OpenFile(GlobalConfig.GATESERVER_LOG_FILE_PATH, os.O_CREATE | os.O_WRONLY, 0600)
 		if err != nil {
 			fmt.Println(err)
 			return

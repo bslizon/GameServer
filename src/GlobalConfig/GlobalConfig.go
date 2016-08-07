@@ -1,4 +1,4 @@
-package globalConfig
+package GlobalConfig
 
 import (
 	logLevel "gameLog/level"
