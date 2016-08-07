@@ -7,8 +7,10 @@ import (
 	"GlobalConfig"
 	logLevel "gameLog/level"
 	"bufio"
+	"sync"
 )
 
+var lgrMtx sync.Mutex	// 解决同时操作文件指针和logger的竞争问题
 var logFileWriter *bufio.Writer
 var logger *log.Logger
 
@@ -17,7 +19,7 @@ var level = GlobalConfig.LOG_LEVEL
 
 func init() {
 	if GlobalConfig.USE_LOG_FILE {
-		expFilePtr, err := os.OpenFile(GlobalConfig.GATESERVER_LOG_FILE_PATH, os.O_CREATE | os.O_WRONLY, 0600)
+		expFilePtr, err := os.OpenFile(GlobalConfig.GATESERVER_LOG_FILE_PATH, os.O_CREATE | os.O_APPEND, 0600)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -31,24 +33,32 @@ func init() {
 
 func Debug(v interface{}) {
 	if logLevel.DEBUG >= level {
+		lgrMtx.Lock()
+		defer lgrMtx.Unlock()
 		logger.Output(2, fmt.Sprintln("[DEBUG]", v))
 	}
 }
 
 func Info(v interface{}) {
 	if logLevel.INFO >= level {
+		lgrMtx.Lock()
+		defer lgrMtx.Unlock()
 		logger.Output(2, fmt.Sprintln("[INFO]", v))
 	}
 }
 
 func Warn(v interface{}) {
 	if logLevel.WARN >= level {
+		lgrMtx.Lock()
+		defer lgrMtx.Unlock()
 		logger.Output(2, fmt.Sprintln("[WARN]", v))
 	}
 }
 
 func Error(v interface{}) {
 	if logLevel.ERROR >= level {
+		lgrMtx.Lock()
+		defer lgrMtx.Unlock()
 		logger.Output(2, fmt.Sprintln("[ERROR]", v))
 		if logFileWriter != nil{
 			logFileWriter.Flush()
@@ -58,6 +68,8 @@ func Error(v interface{}) {
 
 func Panic(v interface{}) {
 	if logLevel.PANIC >= level {
+		lgrMtx.Lock()
+		defer lgrMtx.Unlock()
 		logger.Output(5, fmt.Sprintln("[PANIC]", v))
 		if logFileWriter != nil{
 			logFileWriter.Flush()
@@ -67,6 +79,8 @@ func Panic(v interface{}) {
 
 func Fatal(v interface{}) {
 	if logLevel.FATAL >= level {
+		lgrMtx.Lock()
+		defer lgrMtx.Unlock()
 		logger.Output(2, fmt.Sprintln("[FATAL]", v))
 		if logFileWriter != nil{
 			logFileWriter.Flush()
@@ -76,9 +90,13 @@ func Fatal(v interface{}) {
 }
 
 func Printf(format string, v ...interface{}){
+	lgrMtx.Lock()
+	defer lgrMtx.Unlock()
 	logger.Output(5, fmt.Sprintf(format, v...))
 }
 
 func Flush() error {
+	lgrMtx.Lock()
+	defer lgrMtx.Unlock()
 	return logFileWriter.Flush()
 }
