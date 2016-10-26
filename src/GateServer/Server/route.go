@@ -9,17 +9,17 @@ import (
 )
 
 // 必须保证是线程安全的
-func (svr *TcpPackServer) RoutePackIn(p *Pack.Pack) (err error) {
+func (svr *TcpPackServer) RoutePackIn(p *Pack.Pack) (rerr error) {
 	// panic转error
 	defer func() {
 		if x := recover(); x != nil {
 			switch value := x.(type) {
 			case error:
-				err = value
+				rerr = value
 			case string:
-				err = errors.New(value)
+				rerr = errors.New(value)
 			default:
-				err = errors.New(fmt.Sprintf("unknown panic: %#v. ", value))
+				rerr = errors.New(fmt.Sprintf("unknown panic: %#v. ", value))
 			}
 		}
 	}()
@@ -28,22 +28,22 @@ func (svr *TcpPackServer) RoutePackIn(p *Pack.Pack) (err error) {
 	svr.RoutePackOut(p)
 	gLog.Debug(fmt.Sprintf("routing. sid: %d data: %v", p.Sid, p.Data))
 	////////////////////////////////////////////////////////////////////
-	err = nil
+	rerr = nil
 	return
 }
 
 // 必须保证是线程安全的
-func (svr *TcpPackServer) RoutePackOut(p *Pack.Pack) (err error) {
+func (svr *TcpPackServer) RoutePackOut(p *Pack.Pack) (rerr error) {
 	// panic转error
 	defer func() {
 		if x := recover(); x != nil {
 			switch value := x.(type) {
 			case error:
-				err = value
+				rerr = value
 			case string:
-				err = errors.New(value)
+				rerr = errors.New(value)
 			default:
-				err = errors.New(fmt.Sprintf("unknown panic: %#v ", value))
+				rerr = errors.New(fmt.Sprintf("unknown panic: %#v ", value))
 			}
 		}
 	}()
@@ -64,16 +64,16 @@ func (svr *TcpPackServer) RoutePackOut(p *Pack.Pack) (err error) {
 			er := lk.PutBytes(p.Data)
 			if er != nil {
 				gLog.Error(er)
-				err = errors.New(error.Error(er) + " put wtSyncChan failed.")
+				rerr = errors.New(error.Error(er) + " put wtSyncChan failed.")
 				return
 			}
 		} else {
-			err = errors.New("invalid sid.")
+			rerr = errors.New("invalid sid.")
 			return
 		}
 	}
 
 	////////////////////////////////////////////////////////////////////
-	err = nil
+	rerr = nil
 	return
 }

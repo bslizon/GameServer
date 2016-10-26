@@ -22,17 +22,17 @@ func NewTcpPackServer() *TcpPackServer {
 	return svr
 }
 
-func (svr *TcpPackServer) PutLink(i config.SocketIdType, lk *tcpPackLink) (err error) {
+func (svr *TcpPackServer) PutLink(i config.SocketIdType, lk *tcpPackLink) (rerr error) {
 	// panic转error
 	defer func() {
 		if x := recover(); x != nil {
 			switch value := x.(type) {
 			case error:
-				err = value
+				rerr = value
 			case string:
-				err = errors.New(value)
+				rerr = errors.New(value)
 			default:
-				err = errors.New(fmt.Sprintf("unknown panic: %#v. ", value))
+				rerr = errors.New(fmt.Sprintf("unknown panic: %#v. ", value))
 			}
 		}
 	}()
@@ -53,7 +53,7 @@ func (svr *TcpPackServer) PutLink(i config.SocketIdType, lk *tcpPackLink) (err e
 	svr.linkMap[i] = lk
 
 	////////////////////////////////////////////////////////////////////
-	err = nil
+	rerr = nil
 	return
 }
 
