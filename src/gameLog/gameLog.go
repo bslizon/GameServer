@@ -14,9 +14,6 @@ var lgrMtx sync.Mutex	// 解决同时操作文件指针和logger的竞争问题
 var logFileWriter *bufio.Writer
 var logger *log.Logger
 
-//log输出等级
-var level = GlobalConfig.LOG_LEVEL
-
 func init() {
 	if GlobalConfig.USE_LOG_FILE {
 		expFilePtr, err := os.OpenFile(GlobalConfig.GATESERVER_LOG_FILE_PATH, os.O_CREATE | os.O_APPEND, 0600)
@@ -32,7 +29,7 @@ func init() {
 }
 
 func Debug(v interface{}) {
-	if logLevel.DEBUG >= level {
+	if logLevel.DEBUG >= GlobalConfig.LOG_LEVEL {
 		lgrMtx.Lock()
 		defer lgrMtx.Unlock()
 		logger.Output(2, fmt.Sprintln("[DEBUG]", v))
@@ -40,7 +37,7 @@ func Debug(v interface{}) {
 }
 
 func Info(v interface{}) {
-	if logLevel.INFO >= level {
+	if logLevel.INFO >= GlobalConfig.LOG_LEVEL {
 		lgrMtx.Lock()
 		defer lgrMtx.Unlock()
 		logger.Output(2, fmt.Sprintln("[INFO]", v))
@@ -48,7 +45,7 @@ func Info(v interface{}) {
 }
 
 func Warn(v interface{}) {
-	if logLevel.WARN >= level {
+	if logLevel.WARN >= GlobalConfig.LOG_LEVEL {
 		lgrMtx.Lock()
 		defer lgrMtx.Unlock()
 		logger.Output(2, fmt.Sprintln("[WARN]", v))
@@ -56,7 +53,7 @@ func Warn(v interface{}) {
 }
 
 func Error(v interface{}) {
-	if logLevel.ERROR >= level {
+	if logLevel.ERROR >= GlobalConfig.LOG_LEVEL {
 		lgrMtx.Lock()
 		defer lgrMtx.Unlock()
 		logger.Output(2, fmt.Sprintln("[ERROR]", v))
@@ -67,7 +64,7 @@ func Error(v interface{}) {
 }
 
 func Panic(v interface{}) {
-	if logLevel.PANIC >= level {
+	if logLevel.PANIC >= GlobalConfig.LOG_LEVEL {
 		lgrMtx.Lock()
 		defer lgrMtx.Unlock()
 		logger.Output(5, fmt.Sprintln("[PANIC]", v))
@@ -78,7 +75,7 @@ func Panic(v interface{}) {
 }
 
 func Fatal(v interface{}) {
-	if logLevel.FATAL >= level {
+	if logLevel.FATAL >= GlobalConfig.LOG_LEVEL {
 		lgrMtx.Lock()
 		defer lgrMtx.Unlock()
 		logger.Output(2, fmt.Sprintln("[FATAL]", v))
