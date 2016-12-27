@@ -1,11 +1,10 @@
 package utils
 
 import (
-	gLog "gameLog"
-	"runtime"
+	gLog "GameServer/gameLog"
 	"fmt"
+	"runtime"
 )
-
 
 func PrintPanicStack() {
 	if x := recover(); x != nil {
@@ -18,7 +17,6 @@ func PrintPanicStack() {
 			funcName, file, line, ok = runtime.Caller(i)
 		}
 
-
 		switch value := x.(type) {
 		case error:
 			gLog.Panic(value.Error() + stackString)
@@ -27,7 +25,6 @@ func PrintPanicStack() {
 		default:
 			gLog.Printf("[PANIC] unknown panic: %#v.%s", value, stackString)
 		}
-
 
 	}
 }

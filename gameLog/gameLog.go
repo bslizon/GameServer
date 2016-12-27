@@ -1,30 +1,30 @@
 package gameLog
 
 import (
+	"GameServer/GlobalConfig"
+	logLevel "GameServer/gameLog/level"
+	"bufio"
+	"fmt"
 	"log"
 	"os"
-	"fmt"
-	"GlobalConfig"
-	logLevel "gameLog/level"
-	"bufio"
 	"sync"
 )
 
-var lgrMtx sync.Mutex	// 解决同时操作文件指针和logger的竞争问题
+var lgrMtx sync.Mutex // 解决同时操作文件指针和logger的竞争问题
 var logFileWriter *bufio.Writer
 var logger *log.Logger
 
 func init() {
 	if GlobalConfig.USE_LOG_FILE {
-		expFilePtr, err := os.OpenFile(GlobalConfig.GATESERVER_LOG_FILE_PATH, os.O_CREATE | os.O_APPEND, 0600)
+		expFilePtr, err := os.OpenFile(GlobalConfig.GATESERVER_LOG_FILE_PATH, os.O_CREATE|os.O_APPEND, 0600)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 		logFileWriter = bufio.NewWriter(expFilePtr)
-		logger = log.New(logFileWriter, "", log.Ldate | log.Ltime | log.Lmicroseconds | log.Llongfile)
+		logger = log.New(logFileWriter, "", log.Ldate|log.Ltime|log.Lmicroseconds|log.Llongfile)
 	} else {
-		logger = log.New(os.Stdout, "", log.Ldate | log.Ltime | log.Lmicroseconds | log.Llongfile)
+		logger = log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lmicroseconds|log.Llongfile)
 	}
 }
 
@@ -57,7 +57,7 @@ func Error(v interface{}) {
 		lgrMtx.Lock()
 		defer lgrMtx.Unlock()
 		logger.Output(2, fmt.Sprintln("[ERROR]", v))
-		if logFileWriter != nil{
+		if logFileWriter != nil {
 			logFileWriter.Flush()
 		}
 	}
@@ -68,7 +68,7 @@ func Panic(v interface{}) {
 		lgrMtx.Lock()
 		defer lgrMtx.Unlock()
 		logger.Output(5, fmt.Sprintln("[PANIC]", v))
-		if logFileWriter != nil{
+		if logFileWriter != nil {
 			logFileWriter.Flush()
 		}
 	}
@@ -79,14 +79,14 @@ func Fatal(v interface{}) {
 		lgrMtx.Lock()
 		defer lgrMtx.Unlock()
 		logger.Output(2, fmt.Sprintln("[FATAL]", v))
-		if logFileWriter != nil{
+		if logFileWriter != nil {
 			logFileWriter.Flush()
 		}
 		os.Exit(1)
 	}
 }
 
-func Printf(format string, v ...interface{}){
+func Printf(format string, v ...interface{}) {
 	lgrMtx.Lock()
 	defer lgrMtx.Unlock()
 	logger.Output(5, fmt.Sprintf(format, v...))

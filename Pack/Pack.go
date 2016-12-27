@@ -1,7 +1,7 @@
 package Pack
 
 import (
-	"GateServer/config"
+	"GameServer/GateServer/config"
 )
 
 //数据包结构

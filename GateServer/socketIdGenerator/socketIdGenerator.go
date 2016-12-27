@@ -1,7 +1,7 @@
 package socketIdGenerator
 
 import (
-	"GateServer/config"
+	"GameServer/GateServer/config"
 	"sync"
 )
 

@@ -1,14 +1,14 @@
 package Server
 
 import (
-	"net"
-	gLog "gameLog"
-	g "GateServer/socketIdGenerator"
-	"sync"
-	"GateServer/config"
-	"utils"
+	"GameServer/GateServer/config"
+	g "GameServer/GateServer/socketIdGenerator"
+	gLog "GameServer/gameLog"
+	"GameServer/utils"
 	"errors"
 	"fmt"
+	"net"
+	"sync"
 )
 
 type TcpPackServer struct {
@@ -103,13 +103,13 @@ func (svr *TcpPackServer) GetLinkMapCopy() map[config.SocketIdType]*tcpPackLink 
 }
 
 func (svr *TcpPackServer) Start() {
-	defer func () {
+	defer func() {
 		gLog.Error("server Sstat loop stop.")
 	}()
 	defer utils.PrintPanicStack()
 	////////////////////////////////////////////////////////////////////
 
-	tcpAddr, err := net.ResolveTCPAddr("tcp", ":" + config.EXTERNAL_LISTEN_PORT)
+	tcpAddr, err := net.ResolveTCPAddr("tcp", ":"+config.EXTERNAL_LISTEN_PORT)
 	if err != nil {
 		gLog.Fatal(err)
 	}
@@ -138,7 +138,7 @@ func (svr *TcpPackServer) handleTcpConn(tcpConn *net.TCPConn) {
 	defer utils.PrintPanicStack()
 	////////////////////////////////////////////////////////////////////
 
-	sid  := g.Get()
+	sid := g.Get()
 
 	lk := NewPackLink(sid, svr, tcpConn)
 	err := svr.PutLink(sid, lk)
@@ -150,5 +150,5 @@ func (svr *TcpPackServer) handleTcpConn(tcpConn *net.TCPConn) {
 
 	go lk.StartReadPack()
 	go lk.StartWritePack()
-	gLog.Info(fmt.Sprintf("serving: %s sid: %d mapCount: %d ", tcpConn.RemoteAddr().String(),  lk.sid, len(lk.server.linkMap)))
+	gLog.Info(fmt.Sprintf("serving: %s sid: %d mapCount: %d ", tcpConn.RemoteAddr().String(), lk.sid, len(lk.server.linkMap)))
 }

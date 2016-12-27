@@ -1,16 +1,16 @@
 package Server
 
 import (
-	"net"
-	"time"
+	. "GameServer/GateServer/config"
+	"GameServer/Pack"
+	gLog "GameServer/gameLog"
+	"GameServer/utils"
 	"encoding/binary"
-	. "GateServer/config"
-	"Pack"
-	"utils"
-	gLog "gameLog"
+	"errors"
 	"fmt"
 	"io"
-	"errors"
+	"net"
+	"time"
 )
 
 type tcpPackLink struct {
@@ -31,12 +31,10 @@ func NewPackLink(sid SocketIdType, svr *TcpPackServer, co *net.TCPConn) *tcpPack
 
 func (lk *tcpPackLink) Close() {
 	defer func() {
-	gLog.Info(fmt.Sprintf("disconnected: %s sid: %d mapCount: %d ", lk.conn.RemoteAddr().String(), lk.sid, len(lk.server.linkMap)))
+		gLog.Info(fmt.Sprintf("disconnected: %s sid: %d mapCount: %d ", lk.conn.RemoteAddr().String(), lk.sid, len(lk.server.linkMap)))
 	}()
 	defer utils.PrintPanicStack()
 	////////////////////////////////////////////////////////////////////
-
-
 
 	lk.conn.Close()
 	close(lk.wtSyncChan)
@@ -72,7 +70,6 @@ func (lk *tcpPackLink) PutBytes(b []byte) (rerr error) {
 	return
 }
 
-
 func (lk *tcpPackLink) StartReadPack() {
 	defer func() {
 		lk.server.RemoveLink(lk.sid)
@@ -91,7 +88,7 @@ func (lk *tcpPackLink) StartReadPack() {
 			if err != nil {
 				panic(err)
 			}
-			n,err := lk.conn.Read(sizeBuf[sizeBufIdx:])
+			n, err := lk.conn.Read(sizeBuf[sizeBufIdx:])
 			if err != nil {
 				if err == io.EOF {
 					gLog.Info(fmt.Sprintf("tcp read EOF. sid: %d ", lk.sid))
@@ -111,7 +108,7 @@ func (lk *tcpPackLink) StartReadPack() {
 		dataSize = binary.BigEndian.Uint32(sizeBuf)
 		if dataSize > MAX_INBOUND_PACK_DATA_SIZE {
 			panic("read pack data out of limit.")
-		}else if dataSize == 0 {
+		} else if dataSize == 0 {
 			panic("read pack data size equals 0.")
 		}
 
@@ -122,7 +119,7 @@ func (lk *tcpPackLink) StartReadPack() {
 			if err != nil {
 				panic(err)
 			}
-			n,err := lk.conn.Read(data[dataBufIdx:])
+			n, err := lk.conn.Read(data[dataBufIdx:])
 			if err != nil {
 				if err == io.EOF {
 					gLog.Info(fmt.Sprintf("tcp read EOF. sid: %d ", lk.sid))
@@ -137,7 +134,7 @@ func (lk *tcpPackLink) StartReadPack() {
 			if dataBufIdx == dataSize {
 				lk.server.RoutePackIn(Pack.NewPack(lk.sid, data))
 				break
-			}  else if dataBufIdx > dataSize || dataBufIdx < 0 {
+			} else if dataBufIdx > dataSize || dataBufIdx < 0 {
 				panic("read pack data error.")
 			}
 		}
@@ -175,7 +172,7 @@ func (lk *tcpPackLink) StartWritePack() {
 			}
 
 			n, err := lk.conn.Write(sizeBytes[sizeBufIdx:])
-			if(err != nil) {
+			if err != nil {
 				panic(err)
 			}
 
@@ -195,7 +192,7 @@ func (lk *tcpPackLink) StartWritePack() {
 			}
 
 			n, err := lk.conn.Write(rawData)
-			if(err != nil) {
+			if err != nil {
 				panic(err)
 			}
 

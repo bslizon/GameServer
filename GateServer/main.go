@@ -1,14 +1,14 @@
 package main
 
 import (
-	"GateServer/Server"
-	"os/signal"
+	"GameServer/GateServer/Server"
+	"GameServer/gameLog"
 	"os"
+	"os/signal"
 	//"runtime/pprof"
 	//"GateServer/config"
 	//"time"
 	"syscall"
-	"gameLog"
 )
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 	c := make(chan os.Signal, 10)
 	signal.Notify(c, syscall.SIGINT)
 	select {
-	case <- c:
+	case <-c:
 		gameLog.Info("receive INT signal, server stop.")
 		gameLog.Flush()
 	}
