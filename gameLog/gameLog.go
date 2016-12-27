@@ -92,8 +92,10 @@ func Printf(format string, v ...interface{}) {
 	logger.Output(5, fmt.Sprintf(format, v...))
 }
 
-func Flush() error {
+func Flush() {
 	lgrMtx.Lock()
 	defer lgrMtx.Unlock()
-	return logFileWriter.Flush()
+	if logFileWriter != nil {
+		logFileWriter.Flush()
+	}
 }
