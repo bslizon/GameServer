@@ -25,6 +25,5 @@ func PrintPanicStack() {
 		default:
 			gLog.Printf("[PANIC] unknown panic: %#v.%s", value, stackString)
 		}
-
 	}
 }

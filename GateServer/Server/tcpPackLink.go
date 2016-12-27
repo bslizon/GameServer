@@ -40,34 +40,13 @@ func (lk *tcpPackLink) Close() {
 	close(lk.wtSyncChan)
 }
 
-func (lk *tcpPackLink) PutBytes(b []byte) (rerr error) {
-	// panic转error
-	defer func() {
-		if x := recover(); x != nil {
-			switch value := x.(type) {
-			case error:
-				rerr = value
-			case string:
-				rerr = errors.New(value)
-			default:
-				rerr = errors.New(fmt.Sprintf("unknown panic: %#v. ", value))
-			}
-		}
-	}()
-	////////////////////////////////////////////////////////////////////
-
+func (lk *tcpPackLink) PutBytes(b []byte) error {
 	select {
 	case lk.wtSyncChan <- b:
-		rerr = nil
-		return
+		return nil
 	case <-time.After(time.Second * WRITE_PACK_SYNC_CHAN_TIMEOUT):
-		rerr = errors.New("put wtSyncChan timeout.")
-		return
+		return errors.New("put wtSyncChan timeout.")
 	}
-
-	////////////////////////////////////////////////////////////////////
-	rerr = nil
-	return
 }
 
 func (lk *tcpPackLink) StartReadPack() {

@@ -22,22 +22,7 @@ func NewTcpPackServer() *TcpPackServer {
 	return svr
 }
 
-func (svr *TcpPackServer) PutLink(i config.SocketIdType, lk *tcpPackLink) (rerr error) {
-	// panic转error
-	defer func() {
-		if x := recover(); x != nil {
-			switch value := x.(type) {
-			case error:
-				rerr = value
-			case string:
-				rerr = errors.New(value)
-			default:
-				rerr = errors.New(fmt.Sprintf("unknown panic: %#v. ", value))
-			}
-		}
-	}()
-	////////////////////////////////////////////////////////////////////
-
+func (svr *TcpPackServer) PutLink(i config.SocketIdType, lk *tcpPackLink) error {
 	if len(svr.linkMap) > config.MAX_TCP_CONN {
 		return errors.New("tcp conn limit")
 	}
@@ -52,15 +37,10 @@ func (svr *TcpPackServer) PutLink(i config.SocketIdType, lk *tcpPackLink) (rerr 
 	}()
 	svr.linkMap[i] = lk
 
-	////////////////////////////////////////////////////////////////////
-	rerr = nil
-	return
+	return nil
 }
 
 func (svr *TcpPackServer) GetLink(i config.SocketIdType) (*tcpPackLink, bool) {
-	defer utils.PrintPanicStack()
-	////////////////////////////////////////////////////////////////////
-
 	svr.RLock()
 	defer func() {
 		svr.RUnlock()
@@ -71,9 +51,6 @@ func (svr *TcpPackServer) GetLink(i config.SocketIdType) (*tcpPackLink, bool) {
 
 // 会关闭连接
 func (svr *TcpPackServer) RemoveLink(i config.SocketIdType) {
-	defer utils.PrintPanicStack()
-	////////////////////////////////////////////////////////////////////
-
 	lk, ok := svr.GetLink(i)
 	if ok {
 		svr.Lock()
@@ -88,9 +65,6 @@ func (svr *TcpPackServer) RemoveLink(i config.SocketIdType) {
 
 // 复制一份linkMap，用于广播
 func (svr *TcpPackServer) GetLinkMapCopy() map[config.SocketIdType]*tcpPackLink {
-	defer utils.PrintPanicStack()
-	////////////////////////////////////////////////////////////////////
-
 	linkMap := make(map[config.SocketIdType]*tcpPackLink)
 	svr.RWMutex.Lock()
 	defer func() {
@@ -106,8 +80,6 @@ func (svr *TcpPackServer) Start() {
 	defer func() {
 		gLog.Error("server Sstat loop stop.")
 	}()
-	defer utils.PrintPanicStack()
-	////////////////////////////////////////////////////////////////////
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", ":"+config.EXTERNAL_LISTEN_PORT)
 	if err != nil {
