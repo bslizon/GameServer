@@ -77,10 +77,6 @@ func (svr *TcpPackServer) GetLinkMapCopy() map[config.SocketIdType]*tcpPackLink 
 }
 
 func (svr *TcpPackServer) Start() {
-	defer func() {
-		gLog.Error("server Sstat loop stop.")
-	}()
-
 	tcpAddr, err := net.ResolveTCPAddr("tcp", ":"+config.EXTERNAL_LISTEN_PORT)
 	if err != nil {
 		gLog.Fatal(err)
